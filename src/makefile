@@ -1,10 +1,10 @@
 CXX = g++
 
-TARGET = RiderPart
-SRCS = RiderPart.cpp
+TARGET = main
+SRCS = main.cpp
 
-
-$(TARGET): $(SRCS)
+.PHONY:com
+com: $(SRCS)
 	@$(CXX) $(SRCS) -o $(TARGET)
 
 .PHONY:run
