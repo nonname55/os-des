@@ -5,6 +5,8 @@
 #include<sys/types.h>
 #include<sys/wait.h>
 #include<sys/stat.h>
+#include<sys/ipc.h>
+#include<sys/msg.h>
 #include<unistd.h>
 #include<random>
 #include<mutex>
@@ -22,6 +24,8 @@
 #include<signal.h>
 
 #define RIDER_NUM 3
+#define RESTAURANT_NUM 3
+#define USER_NUM 3
 #define print(msg) { \
     std::lock_guard<std::mutex> cout_lock(cout_mutex); \
     std::cout << msg; \
@@ -161,9 +165,10 @@ struct Rider {
         this->pid = _pid;
     }
     void manage() {
+        print("manage in " + std::to_string(getpid()) << std::endl);
         for (int i = 0; i < 5; ++i) {
             std::shared_ptr<Order> temp = std::make_shared<Order>();
-            // create_order(temp);
+            create_order(temp);
         }
 SORT_ORDERS:
         sort_order();
@@ -250,14 +255,40 @@ FIND_MIN_PATH:
 
         pthread_mutex_unlock(&lock);
     }
-}riders[RIDER_NUM];
+}rider;
+
+struct Restaurant {
+    int posx, posy, id;
+    Restaurant() {}
+    Restaurant(int _posx, int _posy, int _id) {
+        this->posx = _posx;
+        this->posy = _posy;
+        this->id = _id;
+    }
+    
+    void manage() {
+        print("restaurant manage " << id << std::endl);
+    }
+}restaurant;
+
+struct User {
+    int posx, posy, id;
+    User() {}
+    User(int _posx, int _posy, int _id) {
+        this->posx = _posx;
+        this->posy = _posy;
+        this->id = _id;
+    }
+
+    void manage() {
+        print("user manage " << id << std::endl);
+    }
+}user;
 //main
-void create_rider_process();
-void rider_process();
 void log_info(const std::string& s);
-void check_processes_status();
+void check_processes_status(pid_t sche_pid);
 //process
-#define P_NUM 3
+#define P_NUM RIDER_NUM + RESTAURANT_NUM + USER_NUM
 struct Process {
     int id;
     int priority;
@@ -282,7 +313,15 @@ void init_shm(SHM_Data *shm);
 void init_que();
 void push_que();
 void rider_process(int id);
+void restaurant_process(int id);
+void user_process(int id);
 void schedule();
+void create_process();
+void create_rider_process(int l, int r);
+void create_restaurant_process(int l, int r);
+void create_user_process(int l, int r);
+//msgque
+int create_msgque(int svkey);
 
 int main() {
     pid_t pid = fork();
@@ -291,14 +330,14 @@ int main() {
     }
     setsid();
     umask(022);
-    std::string folder = std::string(getenv("HOME")).append("/OS-Des");
+    std::string folder = std::string(getenv("HOME")).append("/Workspace/os-des");
     const std::filesystem::path path = std::filesystem::path(folder);
     if (!(std::filesystem::exists(path) && std::filesystem::is_directory(path))) {
         int re = mkdir(folder.c_str(), 0777);
     }
     chdir(folder.c_str());
     // int fd = open("/dev/null", O_RDWR);
-    int fd = open("/home/mqr/OS-Des/output.txt", O_RDWR);
+    int fd = open("/home/mqr/Workspace/os-des/output.txt", O_RDWR);
     dup2(fd, STDIN_FILENO);
     dup2(fd, STDOUT_FILENO);
     dup2(fd, STDERR_FILENO);
@@ -314,26 +353,56 @@ int main() {
     shm = (SHM_Data*)shmat(shmId, NULL, 0);
     init_shm(shm);
 
-    // pthread_mutex_lock(&shm->mylock);
-    create_rider_process();
-    schedule();
-        
-    sleep(1);
-    // pthread_mutex_unlock(&shm->mylock);
+    pid_t sche_pid = fork();
+    if (sche_pid == 0) {
+        pthread_mutex_lock(&shm->mylock);
+
+        create_process();
+        schedule();
+
+        pthread_mutex_unlock(&shm->mylock);
+    } else if (sche_pid > 0) {
+        while (true) {
+            check_processes_status(sche_pid);
+            sleep(2);
+        }
+    } else {
+        print("schedule fork error");
+    }
 
     return 0;
 }
 
+int create_msgque(int svkey) {
+    key_t key = svkey;
+    int msgqid = msgget(key, IPC_CREAT | 0666);
+    if (msgqid == -1) {
+        print("error create message que, svkey = " << svkey << std::endl);
+        exit(-1);
+    }
+    return msgqid;
+}
+
+template<typename T>
+void write_msgque(int msgqid, T& msg, int msgsiz) {
+    int ret = msgsnd(msgqid , &msg, msgsiz, 0);
+    if (ret == -1) {
+        print("write msg que error at msgqid " << msgqid << std::endl);
+        exit(-1);
+    }
+}
+
+void create_process() {
+    init_que();
+    create_user_process(0, USER_NUM - 1);
+    create_restaurant_process(USER_NUM, USER_NUM + RESTAURANT_NUM - 1);
+    create_rider_process(USER_NUM + RESTAURANT_NUM, P_NUM - 1);
+}
+
 void schedule() {
     for (int i = P_NUM - 1; i >= 0; --i) {
-        *isProOver = false;
         pthread_cond_signal(&(shm->cond_tids[i]));
-        DEBUG
-        // pthread_cond_wait(&(shm->cond_tids[i]), &(shm->mylock));
-        while (!(*isProOver)) {
-            check_processes_status();
-            sleep(1);
-        }
+        pthread_cond_wait(&(shm->cond_tids[i]), &(shm->mylock));
     }
 }
 
@@ -376,23 +445,55 @@ void log_info(const std::string& s) {
     file.close();
 }
 
-void create_rider_process() {
+void create_rider_process(int l, int r) {
     pid_t pid;
-    init_que();
-    for (int i = 0; i < RIDER_NUM; ++i) {
+    for (int i = l; i <= r; ++i) {
         pid = fork();
         if (pid < 0) {
             std::cerr << "fork error" << std::endl;
             exit(-1);
-        }
-        if (pid == 0) {
-            log_info("子进程" + std::to_string(getpid()) + "被创建");
+        } else if (pid == 0) {
             pro[i] = {i, random_int(1, 10), getpid()};
             push_que(i);
             rider_process(i);
             exit(0);
+        } else if (pid > 0) {
+            pthread_cond_wait(&(shm->cond_tids[i]), &(shm->mylock));
         }
-        if (pid > 0) {
+    }
+}
+
+void create_user_process(int l, int r) {
+    pid_t pid;
+    for (int i = l; i <= r; ++i) {
+        pid = fork();
+        if (pid < 0) {
+            std::cerr << "fork error" << std::endl;
+            exit(-1);
+        } else if (pid == 0) {
+            pro[i] = {i, random_int(1, 10), getpid()};
+            push_que(i);
+            user_process(i);
+            exit(0);
+        } else if (pid > 0) {
+            pthread_cond_wait(&(shm->cond_tids[i]), &(shm->mylock));
+        }
+    }
+}
+
+void create_restaurant_process(int l, int r) {
+    pid_t pid;
+    for (int i = l; i <= r; ++i) {
+        pid = fork();
+        if (pid < 0) {
+            std::cerr << "fork error" << std::endl;
+            exit(-1);
+        } else if (pid == 0) {
+            pro[i] = {i, random_int(1, 10), getpid()};
+            push_que(i);
+            restaurant_process(i);
+            exit(0);
+        } else if (pid > 0) {
             pthread_cond_wait(&(shm->cond_tids[i]), &(shm->mylock));
         }
     }
@@ -403,29 +504,48 @@ void rider_process(int id) {
     pthread_cond_signal(&(shm->cond_tids[id]));
     pthread_cond_wait(&(shm->cond_tids[id]), &(shm->mylock));
 
-    print("process " + std::to_string(id) + " is running, pid: " << pro[id].pid << std::endl);
+    print("rider " + std::to_string(id) + " is running, pid: " << pro[id].pid << std::endl);
+    rider.manage();
     sleep(2);
-    *isProOver = true;
+
     pthread_cond_signal(&(shm->cond_tids[id]));
     pthread_mutex_unlock(&(shm->mylock));
 }
 
-void check_processes_status() {
+void restaurant_process(int id) {
+    pthread_mutex_lock(&(shm->mylock));
+    pthread_cond_signal(&(shm->cond_tids[id]));
+    pthread_cond_wait(&(shm->cond_tids[id]), &(shm->mylock));
+
+    print("restaurant " + std::to_string(id) + " is running, pid: " << pro[id].pid << std::endl);
+    restaurant.manage();
+    sleep(2);
+
+    pthread_cond_signal(&(shm->cond_tids[id]));
+    pthread_mutex_unlock(&(shm->mylock));
+}
+
+void user_process(int id) {
+    pthread_mutex_lock(&(shm->mylock));
+    pthread_cond_signal(&(shm->cond_tids[id]));
+    pthread_cond_wait(&(shm->cond_tids[id]), &(shm->mylock));
+
+    print("user " + std::to_string(id) + " is running, pid: " << pro[id].pid << std::endl);
+    user.manage();
+    sleep(2);
+
+    pthread_cond_signal(&(shm->cond_tids[id]));
+    pthread_mutex_unlock(&(shm->mylock));
+}
+
+void check_processes_status(pid_t sche_pid) {
     int status;
-    pid_t pid;
-    for (int i = 0; i < P_NUM; ++i) {
-        pid = waitpid(pro[i].pid, &status, WNOHANG);
-        if (pid == 0) {
-            log_info("子进程" + std::to_string(pro[i].pid) + "正在运行");
-            continue;
-        } 
-        if (pid == -1) {
-            log_info("子进程" + std::to_string(pro[i].pid) + "不存在了");
-            continue;
-        }
-        if (WIFEXITED(status) || WIFSIGNALED(status)) {
-            log_info("子进程" + std::to_string(pro[i].pid) + "已经结束");
-            continue;
-        }
+    pid_t pid = waitpid(sche_pid, &status, WNOHANG);
+    if (pid == 0) {
+        log_info("子进程" + std::to_string(sche_pid) + "正在运行");
+    } else if (pid == -1) {
+        log_info("子进程" + std::to_string(sche_pid) + "不存在了");
+    } else if (WIFEXITED(status) || WIFSIGNALED(status)) {
+        log_info("子进程" + std::to_string(sche_pid) + "已经结束");
     }
 }
