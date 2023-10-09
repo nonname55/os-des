@@ -10,6 +10,8 @@ std::string folder = std::string(getenv("HOME")).append("/Workspace/os-des/outpu
 int fd = open("/home/mqr/Workspace/os-des/output/output.txt", O_RDWR);
 ```
 要把这两个地方改成自己的路径，才可以正常看到输出
+
+为了把输出结果看的更清晰，每次运行前最好把这两个文件内容清空
 # 运行
 可以自己g++编译main.cpp
 也可以在src文件夹下使用命令：`make run`。前提是安装了make
