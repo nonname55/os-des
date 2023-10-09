@@ -2,7 +2,7 @@
 - doc下存放了需求文档
 - src下的main.cpp就是项目代码
 - test文件夹下的文件用于测试
-- output文件夹存放项目输出文件，其中log.txt主要是守护进程输出，output.txt是项目所有使用cout输出的内容
+- output文件夹存放项目输出文件，其中log.txt主要是守护进程输出，output.txt是项目所有使用cout输出的内容，为了把输出结果看的更清晰，每次运行前最好把这两个文件内容清空
 # 注意事项
 在main函数中，有两行代码设置了文件输出目录：
 ```cpp
@@ -11,7 +11,6 @@ int fd = open("/home/mqr/Workspace/os-des/output/output.txt", O_RDWR);
 ```
 要把这两个地方改成自己的路径，才可以正常看到输出
 
-为了把输出结果看的更清晰，每次运行前最好把这两个文件内容清空
 # 运行
 可以自己g++编译main.cpp
 也可以在src文件夹下使用命令：`make run`。前提是安装了make
