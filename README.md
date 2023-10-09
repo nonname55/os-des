@@ -19,8 +19,9 @@ int fd = open("/home/mqr/Workspace/os-des/output/output.txt", O_RDWR);
 ```cpp
 int astar(int sx, int sy, int ex, int ey, bool isPath);
 ```
-找最短路的函数
-起点：(sx, sy)，终点：(ex, ey)，isPath为true是需要保存最短路径，为false就是不需要保存最短路
+找最短路的函数，返回值为最短路长度
+
+起点：(sx, sy)，终点：(ex, ey)，isPath为true是需要保存最短**路径**，为false就是不需要保存最短**路径**
 
 使用示例：
 ```cpp
