@@ -1,7 +1,7 @@
 CXX = g++
 
-TARGET = orderSystem
-SRCS = orderSystem.cpp
+TARGET = test01
+SRCS = test01.cpp
 
 .PHONY:com
 com: $(SRCS)

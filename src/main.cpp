@@ -26,12 +26,67 @@
 #define RIDER_NUM 3
 #define RESTAURANT_NUM 3
 #define USER_NUM 3
+#define SVKEY1 75
+#define SVKEY2 76
 #define print(msg) { \
     std::lock_guard<std::mutex> cout_lock(cout_mutex); \
     std::cout << msg; \
 }
 std::mutex cout_mutex;
 #define DEBUG std::cout << "debug" << std::endl;
+
+//main
+void log_info(const std::string& s);
+void check_processes_status(pid_t sche_pid);
+struct orderMsg {
+    long msg_type;
+    int tarx, tary, userId, orderId, buildingId, shopId, riderID;
+};
+#define MQSIZ 7 * sizeof(int)
+//process
+#define P_NUM RIDER_NUM + RESTAURANT_NUM + USER_NUM
+#define RIDERL USER_NUM + RESTAURANT_NUM
+#define RIDERH P_NUM - 1
+#define RESTAURANTL USER_NUM
+#define RESTAURANTH USER_NUM + RESTAURANT_NUM - 1
+#define USERL 0
+#define USERH USER_NUM - 1
+struct Process {
+    int id;
+    int priority;
+    pid_t pid;
+};
+typedef struct SHM_Data {
+    pthread_mutex_t mylock;
+    pthread_cond_t mycond;
+    pthread_cond_t cond_tids[P_NUM];
+} SHM_Data;
+struct Que {
+    int head;
+    int tail;
+    int q[P_NUM + 1];
+};
+struct Process* pro;
+struct Que* que;
+SHM_Data* shm;
+bool* isProOver;
+int create_shm(const char *path, int index, int size);
+void init_shm(SHM_Data *shm);
+void init_que();
+void push_que();
+void rider_process(int id);
+void restaurant_process(int id);
+void user_process(int id);
+void schedule();
+void create_process();
+void create_rider_process(int l, int r);
+void create_restaurant_process(int l, int r);
+void create_user_process(int l, int r);
+//msgque
+int create_msgque(int svkey);
+template<typename T> void write_msgque(int msgqid, T& msg, int msgsiz);
+template<typename T> void read_msgque(int msgqid, T& msg, int msgsiz, int msgtype);
+
 
 #define G_ROW 10
 #define G_COL 10
@@ -267,7 +322,10 @@ struct Restaurant {
     }
     
     void manage() {
-        print("restaurant manage " << id << std::endl);
+        int msgqid = create_msgque(SVKEY1);
+        struct orderMsg msg;
+        read_msgque(msgqid, msg, MQSIZ, 0);
+        print(msg.tarx << ' ' << msg.tary << std::endl);
     }
 }restaurant;
 
@@ -281,47 +339,16 @@ struct User {
     }
 
     void manage() {
-        print("user manage " << id << std::endl);
+        int msgqid = create_msgque(SVKEY1);
+        struct orderMsg msg;
+        msg.msg_type = random_int(RESTAURANTL, RESTAURANTH);
+        msg.tarx = posx;
+        msg.tary = posy;
+        msg.userId = id;
+        write_msgque(msgqid, msg, MQSIZ);
+        print("user " << id << "success write " << posx << ' ' << posy << std::endl);
     }
 }user;
-//main
-void log_info(const std::string& s);
-void check_processes_status(pid_t sche_pid);
-//process
-#define P_NUM RIDER_NUM + RESTAURANT_NUM + USER_NUM
-struct Process {
-    int id;
-    int priority;
-    pid_t pid;
-};
-typedef struct SHM_Data {
-    pthread_mutex_t mylock;
-    pthread_cond_t mycond;
-    pthread_cond_t cond_tids[P_NUM];
-} SHM_Data;
-struct Que {
-    int head;
-    int tail;
-    int q[P_NUM + 1];
-};
-struct Process* pro;
-struct Que* que;
-SHM_Data* shm;
-bool* isProOver;
-int create_shm(const char *path, int index, int size);
-void init_shm(SHM_Data *shm);
-void init_que();
-void push_que();
-void rider_process(int id);
-void restaurant_process(int id);
-void user_process(int id);
-void schedule();
-void create_process();
-void create_rider_process(int l, int r);
-void create_restaurant_process(int l, int r);
-void create_user_process(int l, int r);
-//msgque
-int create_msgque(int svkey);
 
 int main() {
     pid_t pid = fork();
@@ -392,15 +419,25 @@ void write_msgque(int msgqid, T& msg, int msgsiz) {
     }
 }
 
+template<typename T>
+void read_msgque(int msgqid, T& msg, int msgsiz, int msgtype) {
+    int ret = msgrcv(msgqid, &msg, msgsiz, msgtype, 0);
+    if (ret == -1) {
+        print("read msg que error at msg qid " << msgqid << std::endl);
+        exit(-1);
+    }
+}
+
 void create_process() {
     init_que();
-    create_user_process(0, USER_NUM - 1);
-    create_restaurant_process(USER_NUM, USER_NUM + RESTAURANT_NUM - 1);
-    create_rider_process(USER_NUM + RESTAURANT_NUM, P_NUM - 1);
+    create_user_process(USERL, USERH);
+    create_restaurant_process(RESTAURANTL, RESTAURANTH);
+    create_rider_process(RIDERL, RIDERH);
 }
 
 void schedule() {
-    for (int i = P_NUM - 1; i >= 0; --i) {
+    for (int i = 0; i < P_NUM; ++i) {
+        if (i >= RIDERL && i <= RIDERH) continue;
         pthread_cond_signal(&(shm->cond_tids[i]));
         pthread_cond_wait(&(shm->cond_tids[i]), &(shm->mylock));
     }
@@ -504,6 +541,7 @@ void rider_process(int id) {
     pthread_cond_signal(&(shm->cond_tids[id]));
     pthread_cond_wait(&(shm->cond_tids[id]), &(shm->mylock));
 
+    rider.id = id;
     print("rider " + std::to_string(id) + " is running, pid: " << pro[id].pid << std::endl);
     rider.manage();
     sleep(1);
@@ -517,6 +555,7 @@ void restaurant_process(int id) {
     pthread_cond_signal(&(shm->cond_tids[id]));
     pthread_cond_wait(&(shm->cond_tids[id]), &(shm->mylock));
 
+    restaurant = {random_int(1, 10), random_int(1, 10), id};
     print("restaurant " + std::to_string(id) + " is running, pid: " << pro[id].pid << std::endl);
     restaurant.manage();
     sleep(1);
@@ -530,6 +569,7 @@ void user_process(int id) {
     pthread_cond_signal(&(shm->cond_tids[id]));
     pthread_cond_wait(&(shm->cond_tids[id]), &(shm->mylock));
 
+    user = {random_int(1, 10), random_int(1, 10), id};
     print("user " + std::to_string(id) + " is running, pid: " << pro[id].pid << std::endl);
     user.manage();
     sleep(1);
