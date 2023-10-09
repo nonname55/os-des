@@ -330,14 +330,14 @@ int main() {
     }
     setsid();
     umask(022);
-    std::string folder = std::string(getenv("HOME")).append("/Workspace/os-des");
+    std::string folder = std::string(getenv("HOME")).append("/Workspace/os-des/output");
     const std::filesystem::path path = std::filesystem::path(folder);
     if (!(std::filesystem::exists(path) && std::filesystem::is_directory(path))) {
         int re = mkdir(folder.c_str(), 0777);
     }
     chdir(folder.c_str());
     // int fd = open("/dev/null", O_RDWR);
-    int fd = open("/home/mqr/Workspace/os-des/output.txt", O_RDWR);
+    int fd = open("/home/mqr/Workspace/os-des/output/output.txt", O_RDWR);
     dup2(fd, STDIN_FILENO);
     dup2(fd, STDOUT_FILENO);
     dup2(fd, STDERR_FILENO);
@@ -506,7 +506,7 @@ void rider_process(int id) {
 
     print("rider " + std::to_string(id) + " is running, pid: " << pro[id].pid << std::endl);
     rider.manage();
-    sleep(2);
+    sleep(1);
 
     pthread_cond_signal(&(shm->cond_tids[id]));
     pthread_mutex_unlock(&(shm->mylock));
@@ -519,7 +519,7 @@ void restaurant_process(int id) {
 
     print("restaurant " + std::to_string(id) + " is running, pid: " << pro[id].pid << std::endl);
     restaurant.manage();
-    sleep(2);
+    sleep(1);
 
     pthread_cond_signal(&(shm->cond_tids[id]));
     pthread_mutex_unlock(&(shm->mylock));
@@ -532,7 +532,7 @@ void user_process(int id) {
 
     print("user " + std::to_string(id) + " is running, pid: " << pro[id].pid << std::endl);
     user.manage();
-    sleep(2);
+    sleep(1);
 
     pthread_cond_signal(&(shm->cond_tids[id]));
     pthread_mutex_unlock(&(shm->mylock));
