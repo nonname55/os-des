@@ -23,6 +23,8 @@
 #include<sys/shm.h>
 #include<signal.h>
 
+const std::string workdir = "/home/mqr/Workspace/os-des/";
+
 #define RIDER_NUM 3
 #define RESTAURANT_NUM 3
 #define USER_NUM 3
@@ -40,7 +42,7 @@ void log_info(const std::string& s);
 void check_processes_status(pid_t sche_pid);
 struct orderMsg {
     long msg_type;
-    int tarx, tary, userId, orderId, buildingId, shopId, riderID;
+    int tarx, tary, userId, orderId, buildingId, restaurantId, riderID;
 };
 #define MQSIZ 7 * sizeof(int)
 //process
@@ -69,7 +71,7 @@ struct Que {
 struct Process* pro;
 struct Que* que;
 SHM_Data* shm;
-bool* isProOver;
+int* system_time;
 int create_shm(const char *path, int index, int size);
 void init_shm(SHM_Data *shm);
 void init_que();
@@ -85,8 +87,9 @@ void create_user_process(int l, int r);
 //msgque
 int create_msgque(int svkey);
 template<typename T> void write_msgque(int msgqid, T& msg, int msgsiz);
-template<typename T> void read_msgque(int msgqid, T& msg, int msgsiz, int msgtype);
+template<typename T> int read_msgque(int msgqid, T& msg, int msgsiz, int msgtype);
 
+int random_int(int l, int h);
 
 #define G_ROW 10
 #define G_COL 10
@@ -117,6 +120,14 @@ struct Graph {
             return step + est > p.step + p.est;
         }
     };
+    std::pair<int, int> getValidPos() {
+        int x, y;
+        do {
+            x = random_int(0, G_ROW - 1);
+            y = random_int(0, G_COL - 1);
+        } while (bupt_map[x][y] == POS_ERROR);
+        return {x, y};
+    }
     int H(int sx, int sy, int ex, int ey) {
         return abs(sx - ex) + abs(sy - ey);
     }
@@ -170,7 +181,7 @@ struct Graph {
     }
 }graph;
 
-static int random_int(int l, int h) {
+int random_int(int l, int h) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distrib(l, h);
@@ -190,7 +201,19 @@ struct Order {
             tarx = random_int(0, G_ROW - 1);
             tary = random_int(0, G_COL - 1);
         } while (graph.bupt_map[tarx][tary] == POS_ERROR);
+        auto validPos = graph.getValidPos();
+        tarx = validPos.first;
+        tary = validPos.second;
         required_time = random_int(1, 10);
+    }
+    Order(
+        int _tarx,
+        int _tary,
+        int _required_time
+    ) {
+        this->tarx = _tarx;
+        this->tary = _tary;
+        this->required_time = _required_time;
     }
 };
 
@@ -219,11 +242,32 @@ struct Rider {
         this->speed = _speed;
         this->pid = _pid;
     }
+    bool shouldAcOrd(std::shared_ptr<Order>& order) {
+        return random_int(0, 1) == 1 ? true : false;
+    }
     void manage() {
-        print("manage in " + std::to_string(getpid()) << std::endl);
-        for (int i = 0; i < 5; ++i) {
+        pthread_mutex_lock(&lock);
+        // for (int i = 0; i < 5; ++i) {
+        //     std::shared_ptr<Order> temp = std::make_shared<Order>();
+        //     create_order(temp);
+        // }
+        int msgqid = create_msgque(SVKEY2);
+        struct orderMsg msg;
+        std::vector<orderMsg> abandon;
+        while (read_msgque(msgqid, msg, MQSIZ, 0) >= 0) {
             std::shared_ptr<Order> temp = std::make_shared<Order>();
-            create_order(temp);
+            temp->tarx = msg.tarx;
+            temp->tary = msg.tary;
+            if (shouldAcOrd(temp)) {    
+                create_order(temp);
+                print("我是骑手" << id << "我接了饭店" << msg.restaurantId << "的订单，顾客位置："
+                        << orders.back()->tarx << ' ' << orders.back()->tary << std::endl);
+            } else {
+                abandon.emplace_back(msg);
+            }
+        }
+        for (int i = 0; i < abandon.size(); ++i) {
+            write_msgque(msgqid, abandon[i], MQSIZ);
         }
 SORT_ORDERS:
         sort_order();
@@ -242,6 +286,7 @@ SORT_ORDERS:
             }
             orders.pop_front();
         }
+        pthread_mutex_unlock(&lock);
     }
     double H(const Order& order) {
         int dis = graph.astar(posx, posy, order.tarx, order.tary, false);
@@ -273,6 +318,7 @@ SORT_ORDERS:
 
 FIND_MIN_PATH:        
         graph.astar(rider->posx, rider->posy, order->tarx, order->tary, true);
+        print("骑手" << rider->id << "正在送单，路径：");
         for (const auto& node : graph.shortest_path) {
             while (check_newOrder()) {
                 rider->isNewOrder = true;
@@ -295,25 +341,21 @@ FIND_MIN_PATH:
         // }
         // posx = order->tarx;
         // posy = order->tary;
-        
         pthread_cond_signal(&(rider->cond));
         pthread_mutex_unlock(&(rider->lock));
         return nullptr;
     }
     void create_order(std::shared_ptr<Order>& newOrder) {
-        pthread_mutex_lock(&lock);
-
         ThreadArgs args = {this, newOrder};
         pthread_create(&(newOrder->thread), nullptr, deliver, &args);
         pthread_cond_wait(&cond, &lock);
         orders.push_back(std::move(newOrder));
-
-        pthread_mutex_unlock(&lock);
     }
 }rider;
 
 struct Restaurant {
     int posx, posy, id;
+    std::vector<Order> orders;
     Restaurant() {}
     Restaurant(int _posx, int _posy, int _id) {
         this->posx = _posx;
@@ -324,8 +366,20 @@ struct Restaurant {
     void manage() {
         int msgqid = create_msgque(SVKEY1);
         struct orderMsg msg;
-        read_msgque(msgqid, msg, MQSIZ, 0);
-        print(msg.tarx << ' ' << msg.tary << std::endl);
+        while (read_msgque(msgqid, msg, MQSIZ, id) >= 0) {
+            Order newOrder(msg.tarx, msg.tary, random_int(1, 10));
+            orders.emplace_back(newOrder);
+            print("这里是饭店 " << id << " 接收到了用户 " 
+                    << msg.userId << " 的订单，位于 " << msg.tarx << ' ' << msg.tary << std::endl);
+        }
+        msgqid = create_msgque(SVKEY2);
+        for (int i = 0; i < orders.size(); ++i) {
+            msg.msg_type = 1;
+            msg.tarx = orders[i].tarx;
+            msg.tary = orders[i].tary;
+            msg.restaurantId = id;
+            write_msgque(msgqid, msg, MQSIZ);
+        }
     }
 }restaurant;
 
@@ -339,14 +393,18 @@ struct User {
     }
 
     void manage() {
-        int msgqid = create_msgque(SVKEY1);
-        struct orderMsg msg;
-        msg.msg_type = random_int(RESTAURANTL, RESTAURANTH);
-        msg.tarx = posx;
-        msg.tary = posy;
-        msg.userId = id;
-        write_msgque(msgqid, msg, MQSIZ);
-        print("user " << id << "success write " << posx << ' ' << posy << std::endl);
+        bool isOrder = random_int(0, 1) == 1 ? true : false;
+        if (isOrder) {
+            int msgqid = create_msgque(SVKEY1);
+            struct orderMsg msg;
+            msg.msg_type = random_int(RESTAURANTL, RESTAURANTH);
+            msg.tarx = posx;
+            msg.tary = posy;
+            msg.userId = id;
+            write_msgque(msgqid, msg, MQSIZ);
+            print("我是用户 " << id << " 我订了饭店 " << msg.msg_type << " 的外卖，我在 "
+                    << posx << ' ' << posy << std::endl);
+        }
     }
 }user;
 
@@ -357,14 +415,16 @@ int main() {
     }
     setsid();
     umask(022);
-    std::string folder = std::string(getenv("HOME")).append("/Workspace/os-des/output");
-    const std::filesystem::path path = std::filesystem::path(folder);
+    std::string outputDir = workdir + "output";
+    // std::string folder = std::string(getenv("HOME")).append("/Workspace/os-des/output");
+    const std::filesystem::path path = std::filesystem::path(outputDir);
     if (!(std::filesystem::exists(path) && std::filesystem::is_directory(path))) {
-        int re = mkdir(folder.c_str(), 0777);
+        int re = mkdir(outputDir.c_str(), 0777);
     }
-    chdir(folder.c_str());
+    chdir(outputDir.c_str());
     // int fd = open("/dev/null", O_RDWR);
-    int fd = open("/home/mqr/Workspace/os-des/output/output.txt", O_RDWR);
+    outputDir += "/output.txt";
+    int fd = open(outputDir.c_str(), O_RDWR | O_TRUNC);
     dup2(fd, STDIN_FILENO);
     dup2(fd, STDOUT_FILENO);
     dup2(fd, STDERR_FILENO);
@@ -372,20 +432,24 @@ int main() {
     int shmid[6];
     shmid[0] = shmget(0, sizeof(struct Process) * P_NUM, IPC_CREAT | 0666);
     shmid[1] = shmget(1, sizeof(Que), IPC_CREAT | 0666);
-    shmid[2] = shmget(2, sizeof(bool), IPC_CREAT | 0666);
+    shmid[2] = shmget(2, sizeof(int), IPC_CREAT | 0666);
     int shmId = create_shm(".", 1, sizeof(SHM_Data));
     pro = (struct Process*)shmat(shmid[0], NULL, 0);
     que = (struct Que*)shmat(shmid[1], NULL, 0);
-    isProOver = (bool*)shmat(shmid[2], NULL, 0);
+    system_time = (int*)shmat(shmid[2], NULL, 0);
     shm = (SHM_Data*)shmat(shmId, NULL, 0);
     init_shm(shm);
 
     pid_t sche_pid = fork();
     if (sche_pid == 0) {
         pthread_mutex_lock(&shm->mylock);
-
+        msgctl(msgget(SVKEY1, 0666), IPC_RMID, NULL);
+        msgctl(msgget(SVKEY2, 0666), IPC_RMID, NULL);
         create_process();
-        schedule();
+        while (true) {
+            schedule();
+            sleep(1);
+        }
 
         pthread_mutex_unlock(&shm->mylock);
     } else if (sche_pid > 0) {
@@ -420,12 +484,12 @@ void write_msgque(int msgqid, T& msg, int msgsiz) {
 }
 
 template<typename T>
-void read_msgque(int msgqid, T& msg, int msgsiz, int msgtype) {
-    int ret = msgrcv(msgqid, &msg, msgsiz, msgtype, 0);
+int read_msgque(int msgqid, T& msg, int msgsiz, int msgtype) {
+    int ret = msgrcv(msgqid, &msg, msgsiz, msgtype, IPC_NOWAIT);
     if (ret == -1) {
-        print("read msg que error at msg qid " << msgqid << std::endl);
-        exit(-1);
+        // print("read msg que error at msg qid " << msgqid << std::endl);
     }
+    return ret;
 }
 
 void create_process() {
@@ -437,7 +501,7 @@ void create_process() {
 
 void schedule() {
     for (int i = 0; i < P_NUM; ++i) {
-        if (i >= RIDERL && i <= RIDERH) continue;
+        // if (!(i >= RIDERL && i <= RIDERH)) continue;
         pthread_cond_signal(&(shm->cond_tids[i]));
         pthread_cond_wait(&(shm->cond_tids[i]), &(shm->mylock));
     }
@@ -538,13 +602,13 @@ void create_restaurant_process(int l, int r) {
 
 void rider_process(int id) {
     pthread_mutex_lock(&(shm->mylock));
-    pthread_cond_signal(&(shm->cond_tids[id]));
-    pthread_cond_wait(&(shm->cond_tids[id]), &(shm->mylock));
+    while (true) {
+        pthread_cond_signal(&(shm->cond_tids[id]));
+        pthread_cond_wait(&(shm->cond_tids[id]), &(shm->mylock));
 
-    rider.id = id;
-    print("rider " + std::to_string(id) + " is running, pid: " << pro[id].pid << std::endl);
-    rider.manage();
-    sleep(1);
+        rider.id = id;
+        rider.manage();
+    }
 
     pthread_cond_signal(&(shm->cond_tids[id]));
     pthread_mutex_unlock(&(shm->mylock));
@@ -552,13 +616,14 @@ void rider_process(int id) {
 
 void restaurant_process(int id) {
     pthread_mutex_lock(&(shm->mylock));
-    pthread_cond_signal(&(shm->cond_tids[id]));
-    pthread_cond_wait(&(shm->cond_tids[id]), &(shm->mylock));
+    while (true) {
+        pthread_cond_signal(&(shm->cond_tids[id]));
+        pthread_cond_wait(&(shm->cond_tids[id]), &(shm->mylock));
 
-    restaurant = {random_int(1, 10), random_int(1, 10), id};
-    print("restaurant " + std::to_string(id) + " is running, pid: " << pro[id].pid << std::endl);
-    restaurant.manage();
-    sleep(1);
+        auto validPos = graph.getValidPos();
+        restaurant = {validPos.first, validPos.second, id};
+        restaurant.manage();
+    }
 
     pthread_cond_signal(&(shm->cond_tids[id]));
     pthread_mutex_unlock(&(shm->mylock));
@@ -566,13 +631,14 @@ void restaurant_process(int id) {
 
 void user_process(int id) {
     pthread_mutex_lock(&(shm->mylock));
-    pthread_cond_signal(&(shm->cond_tids[id]));
-    pthread_cond_wait(&(shm->cond_tids[id]), &(shm->mylock));
+    while (true) {
+        pthread_cond_signal(&(shm->cond_tids[id]));
+        pthread_cond_wait(&(shm->cond_tids[id]), &(shm->mylock));
 
-    user = {random_int(1, 10), random_int(1, 10), id};
-    print("user " + std::to_string(id) + " is running, pid: " << pro[id].pid << std::endl);
-    user.manage();
-    sleep(1);
+        auto validPos = graph.getValidPos();
+        user = {validPos.first, validPos.second, id};
+        user.manage();
+    }
 
     pthread_cond_signal(&(shm->cond_tids[id]));
     pthread_mutex_unlock(&(shm->mylock));
