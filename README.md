@@ -40,3 +40,18 @@ for (const auto& node : graph.shortest_path) {
 static int random_int(int l, int h);
 ```
 作用：生成一个在区间`[l,h]`间的随机数
+
+## print
+由于项目是多线程、多进程环境，std::cout不安全，容易导致输出混乱，所以为了std::cout输出方便，写了print函数：
+```cpp
+#define print(msg) { \
+    std::lock_guard<std::mutex> cout_lock(cout_mutex); \
+    std::cout << msg; \
+}
+```
+使用示例（其实跟用cout差不多）
+```cpp
+print("hello world" << message << std::endl);
+```
+
+使用c语言的printf也可以保证线程安全
