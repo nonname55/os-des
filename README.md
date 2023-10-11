@@ -11,8 +11,8 @@ const std::string workdir = "/home/mqr/Workspace/os-des/";
 要把这个地方改成自己的路径，才可以正常看到输出
 
 # 运行及关闭
-可以自己g++编译main.cpp
-也可以在src文件夹下使用命令：`make run`。前提是安装了make
+1. 常规方式，g++编译运行。但生成的文件名最好是main
+2. 使用make工具，Ubuntu中可以通过`sudo apt install make`安装make，然后进入src目录下，执行`make run`命令。
 
 如果想终止项目运行，在Linux终端执行以下命令：
 ```console
