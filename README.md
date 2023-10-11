@@ -10,9 +10,15 @@ const std::string workdir = "/home/mqr/Workspace/os-des/";
 ```
 要把这个地方改成自己的路径，才可以正常看到输出
 
-# 运行
+# 运行及关闭
 可以自己g++编译main.cpp
 也可以在src文件夹下使用命令：`make run`。前提是安装了make
+
+如果想终止项目运行，在Linux终端执行以下命令：
+```console
+pkill -f ./main
+```
+
 # 函数说明
 ## Graph
 ### astar
