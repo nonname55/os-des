@@ -1,5 +1,5 @@
 # 目录介绍
-- doc下存放了需求文档
+- doc下存放了需求文档（一些尚未解决的问题）
 - src下的main.cpp就是项目代码
 - test文件夹下的文件用于测试
 - output文件夹存放项目输出文件，其中log.txt主要是守护进程输出，output.txt是项目所有使用cout输出的内容
@@ -8,7 +8,7 @@
 ```cpp
 const std::string workdir = "/home/mqr/Workspace/os-des/";
 ```
-要把这个地方改成自己的路径，才可以正常看到输出
+要把这个地方改成自己的项目路径，才可以正常看到输出
 
 # 运行及关闭
 1. 常规方式，g++编译运行。但生成的文件名最好是main
@@ -19,45 +19,83 @@ const std::string workdir = "/home/mqr/Workspace/os-des/";
 pkill -f ./main
 ```
 
-# 函数说明
-## Graph
-### astar
-```cpp
-int astar(int sx, int sy, int ex, int ey, bool isPath);
-```
-找最短路的函数，返回值为最短路长度
-
-起点：(sx, sy)，终点：(ex, ey)，isPath为true是需要保存最短**路径**，为false就是不需要保存最短**路径**
-
-使用示例：
-```cpp
-int dis = graph.astar(posx, posy, order.tarx, order.tary, false);
-```
-
-注意，如果设置了最后一个参数为true，那么最短路径会保存在graph.shortest_path中，访问示例：
-```cpp
-for (const auto& node : graph.shortest_path) {
-    ... 
-}
-```
-
-## random_int
-```cpp
-static int random_int(int l, int h);
-```
-作用：生成一个在区间`[l,h]`间的随机数
-
+# 部分功能性函数使用说明
 ## print
-由于项目是多线程、多进程环境，std::cout不安全，容易导致输出混乱，所以为了std::cout输出方便，写了print函数：
+代码：
 ```cpp
 #define print(msg) { \
     std::lock_guard<std::mutex> cout_lock(cout_mutex); \
     std::cout << msg; \
 }
 ```
-使用示例（其实跟用cout差不多）
-```cpp
-print("hello world" << message << std::endl);
+功能：
 ```
+线程安全的cout
+```
+使用示例：
+```cpp
+int x = 0, y = 1;
+print("hello world" << x << ' ' << y << std::endl);
+```
+## Graph
+注意，使用Graph结构体中的任何函数都要用`graph.xxx`调用
+### getValidPos
+功能：
+```
+在地图上获取一个合法的随机位置
+```
+代码：
+```cpp
+std::pair<int, int> getValidPos() {
+    int x, y;
+    do {
+        x = random_int(0, G_ROW - 1);
+        y = random_int(0, G_COL - 1);
+    } while (bupt_map[x][y] == POS_ERROR);
+    return {x, y};
+}
+```
+使用示例：
+```cpp
+struct Point {
+    int x, y;
+} point;
 
-使用c语言的printf也可以保证线程安全
+auto pos = graph.getValidPos();
+point.x = pos.first;
+point.y = pos.second;
+```
+### astar
+原型：
+```cpp
+int astar(int sx, int sy, int ex, int ey, bool isPath)
+```
+功能：
+```
+获得最短路，获得最短路径，返回值为最短路的值
+如果最后一个参数isPath为true，就是需要保存最短路径（会保存在graph.shortest_path中），反之不需要
+为了项目性能考虑，如果只需要知道最短路有多长，isPath就设为false
+```
+使用示例：
+```cpp
+//不需要路径
+int dis = graph.astar(0, 0, 8, 9, false);
+//需要路径
+int dis = graph.astar(0, 0, 8, 9, true);
+for (const auto& node : graph.shortest_path) {
+    ... 
+}
+```
+## random_int
+原型：
+```cpp
+int random_int(int l, int h);
+```
+功能：
+```
+生成一个在区间[l, h]的随机数
+```
+使用示例：
+```cpp
+int x = random_int(1, 10);
+```
