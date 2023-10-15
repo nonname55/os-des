@@ -1,23 +1,26 @@
 # 目录介绍
+- src下是所有函数、变量的定义，其中main.cpp是项目的入口文件（main函数所在文件）
 - doc下存放了需求文档（一些尚未解决的问题）
-- src下的main.cpp就是项目代码
 - test文件夹下的文件用于测试
 - output文件夹存放项目输出文件，其中log.txt主要是守护进程输出，output.txt是项目所有使用cout输出的内容
-# 注意事项
-如果想要运行项目，首先要设置好自己的项目路径，位置在main.cpp的大约26行的位置：
-```cpp
-const std::string workdir = "/home/mqr/Workspace/os-des/";
-```
-要把这个地方改成自己的项目路径，才可以正常看到输出
+- include下是项目头文件，是所有模块的变量、函数声明
+- bin下是项目生成的可执行文件
 
 # 运行及关闭
-1. 常规方式，g++编译运行。但生成的文件名最好是main
-2. 使用make工具，Ubuntu中可以通过`sudo apt install make`安装make，然后进入src目录下，执行`make run`命令。
+由于项目比较庞大，所以需要借助makefile进行编译。使用`sudo apt install make`安装make，然后将目录切换为项目路径（~/os-des/）下，执行`make`。经过一段时间的等待（等待时间可能比较长），控制台所有提示信息被清空，此时项目已经开始运行
+
+编译+运行：
+```
+~/Workspace/os-des
+➞  make
+```
 
 如果想终止项目运行，在Linux终端执行以下命令：
 ```console
 pkill -f ./main
 ```
+
+项目所有使用print打印出的内容都会在output文件夹下的output.txt显示出来
 
 # 部分功能性函数使用说明
 ## print

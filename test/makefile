@@ -1,7 +1,7 @@
 CXX = g++
 
-TARGET = test01
-SRCS = test01.cpp
+TARGET = test
+SRCS = test.cpp
 
 .PHONY:com
 com: $(SRCS)
