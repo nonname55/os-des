@@ -31,41 +31,86 @@ int main() {
     dup2(fd, STDOUT_FILENO);
     dup2(fd, STDERR_FILENO);
 
-    int shmid[6];
-    shmid[0] = shmget(0, sizeof(struct Process) * P_NUM, IPC_CREAT | 0666);
-    shmid[1] = shmget(1, sizeof(Que), IPC_CREAT | 0666);
-    shmid[2] = shmget(2, sizeof(int), IPC_CREAT | 0666);
+    int shmid[10];
+    shmid[0] = shmget(0, sizeof(struct Process) * RIDER_NUM, IPC_CREAT | 0666);
+    shmid[1] = shmget(1, sizeof(struct Process) * USER_NUM, IPC_CREAT | 0666);
+    shmid[2] = shmget(2, sizeof(struct Process) * RESTAURANT_NUM, IPC_CREAT | 0666);
+    shmid[3] = shmget(3, sizeof(Que), IPC_CREAT | 0666);
+    shmid[4] = shmget(4, sizeof(Que), IPC_CREAT | 0666);
+    shmid[5] = shmget(5, sizeof(Que), IPC_CREAT | 0666);
+    shmid[6] = shmget(6, sizeof(int), IPC_CREAT | 0666);
     int shmId = create_shm(".", 1, sizeof(SHM_Data));
-    pro = (struct Process*)shmat(shmid[0], NULL, 0);
-    que = (struct Que*)shmat(shmid[1], NULL, 0);
-    system_time = (int*)shmat(shmid[2], NULL, 0);
+    riderPro = (struct Process*)shmat(shmid[0], NULL, 0);
+    userPro = (struct Process*)shmat(shmid[1], NULL, 0);
+    restPro = (struct Process*)shmat(shmid[2], NULL, 0);
+    riderQue = (struct Que*)shmat(shmid[3], NULL, 0);
+    userQue = (struct Que*)shmat(shmid[4], NULL, 0);
+    restQue = (struct Que*)shmat(shmid[5], NULL, 0);
+    system_time = (int*)shmat(shmid[6], NULL, 0);
     shm = (SHM_Data*)shmat(shmId, NULL, 0);
     init_shm(shm);
 
-    pid_t sche_pid = fork();
-    if (sche_pid == 0) {
-        pthread_mutex_lock(&shm->mylock);
-        msgctl(msgget(SVKEY1, 0666), IPC_RMID, NULL);
-        msgctl(msgget(SVKEY2, 0666), IPC_RMID, NULL);
-        msgctl(msgget(SVKEY3, 0666), IPC_RMID, NULL);
-        msgctl(msgget(SVKEY4, 0666), IPC_RMID, NULL);
-        msgctl(msgget(SVKEY5, 0666), IPC_RMID, NULL);
-        msgctl(msgget(SVKEY6, 0666), IPC_RMID, NULL);
-        msgctl(msgget(SVKEY7, 0666), IPC_RMID, NULL);
-        create_process();
-        while (true) {
-            schedule();
-            sleep(1);
-        }
+    msgctl(msgget(SVKEY1, 0666), IPC_RMID, NULL);
+    msgctl(msgget(SVKEY2, 0666), IPC_RMID, NULL);
+    msgctl(msgget(SVKEY3, 0666), IPC_RMID, NULL);
+    msgctl(msgget(SVKEY4, 0666), IPC_RMID, NULL);
+    msgctl(msgget(SVKEY5, 0666), IPC_RMID, NULL);
+    msgctl(msgget(SVKEY6, 0666), IPC_RMID, NULL);
+    msgctl(msgget(SVKEY7, 0666), IPC_RMID, NULL);
 
-        pthread_mutex_unlock(&shm->mylock);
-    } else if (sche_pid > 0) {
+    pid_t scheRider = fork();
+    if (scheRider == 0) {
+        pthread_mutex_lock(&shm->riderLock);
+        
+        setsid();
+        create_rider_process(1, RIDER_NUM);
         while (true) {
-            check_processes_status(sche_pid);
+            scheduleRider();
             sleep(2);
         }
-    } else {
-        print("schedule fork error");
+
+        pthread_mutex_unlock(&shm->riderLock);
+    } else if (scheRider < 0) {
+        print("schedule rider fork error");
+    }
+
+    pid_t scheUser = fork();
+    if (scheUser == 0) {
+        pthread_mutex_lock(&shm->userLock);
+        
+        setsid();
+        create_user_process(1, USER_NUM);
+        while (true) {
+            scheduleUser();
+            sleep(2);
+        }
+
+        pthread_mutex_unlock(&shm->userLock);
+    } else if (scheUser < 0) {
+        print("schedule user fork error");
+    }
+
+    pid_t scheRest = fork();
+    if (scheRest == 0) {
+        pthread_mutex_lock(&shm->restLock);
+        
+        setsid();
+        create_restaurant_process(1, RESTAURANT_NUM);
+        while (true) {
+            scheduleRest();
+            sleep(2);
+        }
+
+        pthread_mutex_unlock(&shm->restLock);
+    } else if (scheRest < 0) {
+        print("schedule restaurant fork error");
+    }
+
+    while (true) {
+        check_processes_status(scheRider);
+        check_processes_status(scheUser);
+        check_processes_status(scheRest);
+        sleep(2);
     }
 
     return 0;

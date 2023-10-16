@@ -7,7 +7,7 @@
 #include "graph.h"
 
 struct Order {
-    int tarx, tary, required_time,userId, riderId, restaurantId;
+    int tarx, tary, required_time, userId, riderId, restaurantId;
     int dis = 0;
     bool sent=false;
     double weight = 0.0;

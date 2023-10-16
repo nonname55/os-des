@@ -3,11 +3,10 @@
 User user;
 
 void User::manage() {
-    //bool isOrder = random_int(0, 1) == 1 ? true : false;
     struct orderMsg msg;
     if (isOrder()) {
         int msgqid = create_msgque(SVKEY1);
-        msg.msg_type = random_int(RESTAURANTL, RESTAURANTH);
+        msg.msg_type = random_int(1, RESTAURANT_NUM);
         msg.tarx = posx;
         msg.tary = posy;
         msg.userId = id;

@@ -5,6 +5,11 @@
 #include "macro.h"
 #include "util.h"
 
+#define G_ROW 10
+#define G_COL 10
+#define D_NUM 4
+#define POS_ERROR '#'
+
 struct Graph {
     char bupt_map[G_ROW][G_COL + 1] = {
         {".........."},

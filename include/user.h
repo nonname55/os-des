@@ -5,6 +5,7 @@
 #include "msgque.h"
 #include "util.h"
 #include "macro.h"
+#include "restaurant.h"
 
 struct User {
     int posx, posy, id;

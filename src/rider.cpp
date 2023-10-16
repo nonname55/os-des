@@ -10,10 +10,6 @@ bool Rider::shouldAcOrd(std::shared_ptr<Order>& order) {
 }
 void Rider::manage() {
     pthread_mutex_lock(&lock);
-    // for (int i = 0; i < 5; ++i) {
-    //     std::shared_ptr<Order> temp = std::make_shared<Order>();
-    //     create_order(temp);
-    // }
     getOrderFromResta();
     
     getDishFromResta();
@@ -132,6 +128,7 @@ FIND_MIN_PATH:
         rider->posy = node.second;
         print(rider->posx << ',' << rider->posy << ' ' << std::flush);
     }
+    print(std::endl);
 
     int msgqid = create_msgque(SVKEY7);
     struct orderMsg msg;

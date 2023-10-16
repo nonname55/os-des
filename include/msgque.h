@@ -23,7 +23,7 @@ template<typename T>
 void write_msgque(int msgqid, T& msg, int msgsiz) {
     int ret = msgsnd(msgqid , &msg, msgsiz, 0);
     if (ret == -1) {
-        print("write msg que error at msgqid " << msgqid << std::endl);
+        print(getpid() << " write msg que error at msgqid " << msgqid << std::endl);
         exit(-1);
     }
 }
