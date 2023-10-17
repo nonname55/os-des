@@ -22,7 +22,7 @@
 
 如果想终止项目运行，在Linux终端执行以下命令：
 ```console
-pkill -f ./main
+pkill -9 -f ./main
 ```
 
 项目所有使用print打印出的内容都会在output文件夹下的output.txt显示出来
