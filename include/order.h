@@ -7,25 +7,28 @@
 #include "graph.h"
 
 struct Order {
-    int tarx, tary, required_time, userId, riderId, restaurantId;
-    int dis = 0;
-    bool sent=false;
+    int user_id, rider_id, rest_id, order_id;
+    int user_x, user_y, rest_x, rest_y, required_time, done_time;
+    bool is_take;
+    bool sent = false;
     double weight = 0.0;
 
     pthread_cond_t cond;
     pthread_t thread;
 
-    Order() {
+    Order() 
+    {
         pthread_cond_init(&cond, nullptr);
         auto validPos = graph.getValidPos();
-        tarx = validPos.first;
-        tary = validPos.second;
+        user_x = validPos.first;
+        user_y = validPos.second;
         required_time = random_int(1, 10);
     }
 
-    Order(int _tarx, int _tary, int _required_time) {
-        this->tarx = _tarx;
-        this->tary = _tary;
+    Order(int _tarx, int _tary, int _required_time) 
+    {
+        this->user_x = _tarx;
+        this->user_y = _tary;
         this->required_time = _required_time;
     }
 };

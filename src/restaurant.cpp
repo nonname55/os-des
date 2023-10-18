@@ -2,10 +2,11 @@
 
 Restaurant restaurant;
 
-void Restaurant::manage() {
+void Restaurant::manage() 
+{
     int msgqid = create_msgque(SVKEY1);
     struct orderMsg msg;
-    while (read_msgque(msgqid, msg, MQSIZ, id) >= 0) {
+    while (read_msgque(msgqid, msg, ORDERSIZ, id, false) >= 0) {
         Order newOrder(msg.tarx, msg.tary, random_int(1, 10));
         orders.emplace_back(newOrder);
         print("这里是饭店 " << id << " 接收到了用户 " 
@@ -14,32 +15,35 @@ void Restaurant::manage() {
     msgqid = create_msgque(SVKEY2);
     for (int i = 0; i < orders.size(); ++i) {
         msg.msg_type = 1;
-        msg.tarx = orders[i].tarx;
-        msg.tary = orders[i].tary;
+        msg.tarx = orders[i].user_x;
+        msg.tary = orders[i].user_y;
         msg.restaurantId = id;
-        write_msgque(msgqid, msg, MQSIZ);
+        write_msgque(msgqid, msg, ORDERSIZ);
     }
 
     msgqid = create_msgque(SVKEY3);
-    while (read_msgque(msgqid, msg, MQSIZ, id) >= 0) {
+    while (read_msgque(msgqid, msg, ORDERSIZ, id, false) >= 0) {
         //confOrdersQue.emplace_back(msg);
         print("这里是饭店 " << id << " 接收到了骑手 " << msg.riderID 
         << " 的接单消息" << " 该单号需要送到 "<<msg.tarx << ' ' << msg.tary << std::endl);
         sleep(1);//做饭
         msg.msg_type=msg.riderID;
         msgqid = create_msgque(SVKEY4);
-        write_msgque(msgqid, msg, MQSIZ);
+        write_msgque(msgqid, msg, ORDERSIZ);
         msgqid = create_msgque(SVKEY3);
         print("饭店 " << id << " 做餐完毕，向骑手 " << msg.riderID 
             << " 发送取餐请求" << " 该单号需要送到 "<<msg.tarx << ' ' << msg.tary << std::endl);
+        std::stringstream info;
+        info << "rest";
+        WriteFile(logPath, info.str(), true);
     }
     
     msgqid = create_msgque(SVKEY5);
-    while (read_msgque(msgqid, msg, MQSIZ, id) >= 0) {
+    while (read_msgque(msgqid, msg, ORDERSIZ, id, false) >= 0) {
         if(haveArrived()){
             msg.msg_type=msg.riderID;
             msgqid = create_msgque(SVKEY6);
-            write_msgque(msgqid, msg, MQSIZ);
+            write_msgque(msgqid, msg, ORDERSIZ);
             msgqid = create_msgque(SVKEY5);
             print("饭店 "<< id <<"已经将餐交给骑手 "<<msg.riderID<<std::endl);
         }
@@ -48,7 +52,7 @@ void Restaurant::manage() {
         }
     }
     for(int i=0;i<unArrived.size();i++) {
-        write_msgque(msgqid,unArrived[i],MQSIZ); // 放回队列，骑手还没到
+        write_msgque(msgqid,unArrived[i],ORDERSIZ); // 放回队列，骑手还没到
     }
     unArrived.clear();
     

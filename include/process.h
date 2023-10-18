@@ -28,14 +28,15 @@ struct Que {
     int q[P_NUM + 1];
 };
 
-extern struct Process* riderPro;
-extern struct Process* userPro;
-extern struct Process* restPro;
-extern struct Que* riderQue;
-extern struct Que* userQue;
-extern struct Que* restQue;
-extern SHM_Data* shm;
-extern int* system_time;
+extern struct Process *riderPro;
+extern struct Process *userPro;
+extern struct Process *restPro;
+extern struct Que *riderQue;
+extern struct Que *userQue;
+extern struct Que *restQue;
+extern SHM_Data *shm;
+extern int *order_count;
+extern int *system_time;
 
 int create_shm(const char *path, int index, int size);
 void init_shm(SHM_Data *shm);

@@ -26,5 +26,7 @@
 #include <sys/shm.h>
 #include <signal.h>
 #include <map>
+#include <sys/file.h>
+#include <sstream>
 
 #endif

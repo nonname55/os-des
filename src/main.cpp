@@ -7,10 +7,12 @@
 #include "rider.h"
 #include "restaurant.h"
 #include "user.h"
+#include "file.h"
 
-int main() {
-    std::string workdir;
+int main() 
+{
     getPath(workdir);
+    logPath = workdir + "output/log.txt";
 
     pid_t pid = fork();
     if (pid > 0) {
@@ -39,6 +41,7 @@ int main() {
     shmid[4] = shmget(4, sizeof(Que), IPC_CREAT | 0666);
     shmid[5] = shmget(5, sizeof(Que), IPC_CREAT | 0666);
     shmid[6] = shmget(6, sizeof(int), IPC_CREAT | 0666);
+    shmid[7] = shmget(7, sizeof(int), IPC_CREAT | 0666);
     int shmId = create_shm(".", 1, sizeof(SHM_Data));
     riderPro = (struct Process*)shmat(shmid[0], NULL, 0);
     userPro = (struct Process*)shmat(shmid[1], NULL, 0);
@@ -46,9 +49,13 @@ int main() {
     riderQue = (struct Que*)shmat(shmid[3], NULL, 0);
     userQue = (struct Que*)shmat(shmid[4], NULL, 0);
     restQue = (struct Que*)shmat(shmid[5], NULL, 0);
-    system_time = (int*)shmat(shmid[6], NULL, 0);
+    order_count = (int*)shmat(shmid[6], NULL, 0);
+    system_time = (int*)shmat(shmid[7], NULL, 0);
     shm = (SHM_Data*)shmat(shmId, NULL, 0);
     init_shm(shm);
+
+    *order_count = 1;
+    *system_time = 0;
 
     msgctl(msgget(SVKEY1, 0666), IPC_RMID, NULL);
     msgctl(msgget(SVKEY2, 0666), IPC_RMID, NULL);
@@ -82,7 +89,7 @@ int main() {
         create_user_process(1, USER_NUM);
         while (true) {
             scheduleUser();
-            sleep(2);
+            sleep(5);
         }
 
         pthread_mutex_unlock(&shm->userLock);
@@ -110,7 +117,8 @@ int main() {
         check_processes_status(scheRider);
         check_processes_status(scheUser);
         check_processes_status(scheRest);
-        sleep(2);
+        sleep(1);
+        ++(*system_time);
     }
 
     return 0;

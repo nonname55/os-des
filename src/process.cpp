@@ -5,22 +5,25 @@
 #include "user.h"
 #include "restaurant.h"
 
-struct Process* riderPro;
-struct Process* userPro;
-struct Process* restPro;
-struct Que* riderQue;
-struct Que* userQue;
-struct Que* restQue;
-SHM_Data* shm;
-int* system_time;
+struct Process *riderPro;
+struct Process *userPro;
+struct Process *restPro;
+struct Que *riderQue;
+struct Que *userQue;
+struct Que *restQue;
+SHM_Data *shm;
+int *order_count;
+int *system_time;
 
-int create_shm(const char *path, int index, int size) {
+int create_shm(const char *path, int index, int size) 
+{
     key_t key = ftok(path, index);
     int shmid = shmget(key, size, IPC_CREAT | 0666); 
     return shmid;
 }
 
-void init_shm(SHM_Data* shm) {
+void init_shm(SHM_Data* shm) 
+{
     pthread_mutexattr_t mattr; 
     pthread_condattr_t cattr; 
     pthread_mutexattr_init(&mattr); 
@@ -44,22 +47,26 @@ void init_shm(SHM_Data* shm) {
     }
 }
 
-void pushRiderQue(int val) {
+void pushRiderQue(int val) 
+{
     (riderQue->q)[riderQue->tail] = val;
     (riderQue->tail) = ((riderQue->tail) + 1) % (P_NUM + 1);
 }
 
-void pushUserQue(int val) {
+void pushUserQue(int val) 
+{
     (userQue->q)[userQue->tail] = val;
     (userQue->tail) = ((userQue->tail) + 1) % (P_NUM + 1);
 }
 
-void pushRestQue(int val) {
+void pushRestQue(int val) 
+{
     (restQue->q)[restQue->tail] = val;
     (restQue->tail) = ((restQue->tail) + 1) % (P_NUM + 1);
 }
 
-void init_que() {
+void init_que() 
+{
     riderQue->head = 0;
     riderQue->tail = 0;
     userQue->head = 0;
@@ -68,13 +75,14 @@ void init_que() {
     restQue->tail = 0;
 }
 
-void rider_process(int id) {
+void rider_process(int id) 
+{
     pthread_mutex_lock(&(shm->riderLock));
     while (true) {
         pthread_cond_signal(&(shm->riderConds[id]));
         pthread_cond_wait(&(shm->riderConds[id]), &(shm->riderLock));
 
-        rider.id = id;
+        rider.self_id = id;
         rider.manage();
     }
 
@@ -82,7 +90,8 @@ void rider_process(int id) {
     pthread_mutex_unlock(&(shm->riderLock));
 }
 
-void restaurant_process(int id) {
+void restaurant_process(int id) 
+{
     pthread_mutex_lock(&(shm->restLock));
     while (true) {
         pthread_cond_signal(&(shm->restConds[id]));
@@ -97,7 +106,8 @@ void restaurant_process(int id) {
     pthread_mutex_unlock(&(shm->restLock));
 }
 
-void user_process(int id) {
+void user_process(int id) 
+{
     pthread_mutex_lock(&(shm->userLock));
     while (true) {
         pthread_cond_signal(&(shm->userConds[id]));
@@ -112,35 +122,40 @@ void user_process(int id) {
     pthread_mutex_unlock(&(shm->userLock));
 }
 
-void scheduleRider() {
+void scheduleRider() 
+{
     for (int i = 1; i <= RIDER_NUM; ++i) {
         pthread_cond_signal(&(shm->riderConds[i]));
         pthread_cond_wait(&(shm->riderConds[i]), &(shm->riderLock));
     }
 }
 
-void scheduleUser() {
+void scheduleUser() 
+{
     for (int i = 1; i <= USER_NUM; ++i) {
         pthread_cond_signal(&(shm->userConds[i]));
         pthread_cond_wait(&(shm->userConds[i]), &(shm->userLock));
     }
 }
 
-void scheduleRest() {
+void scheduleRest() 
+{
     for (int i = 1; i <= RESTAURANT_NUM; ++i) {
         pthread_cond_signal(&(shm->restConds[i]));
         pthread_cond_wait(&(shm->restConds[i]), &(shm->restLock));
     }
 }
 
-void create_process() {
+void create_process() 
+{
     init_que();
     create_user_process(USERL, USERH);
     create_restaurant_process(RESTAURANTL, RESTAURANTH);
     create_rider_process(RIDERL, RIDERH);
 }
 
-void create_rider_process(int l, int r) {
+void create_rider_process(int l, int r) 
+{
     pid_t pid;
     for (int i = l; i <= r; ++i) {
         pid = fork();
@@ -148,7 +163,6 @@ void create_rider_process(int l, int r) {
             std::cerr << "fork error" << std::endl;
             exit(-1);
         } else if (pid == 0) {
-            print("create rider " << getpid() << std::endl);
             riderPro[i] = {i, random_int(1, 10), getpid()};
             pushRiderQue(i);
             rider_process(i);
@@ -159,7 +173,8 @@ void create_rider_process(int l, int r) {
     }
 }
 
-void create_user_process(int l, int r) {
+void create_user_process(int l, int r) 
+{
     pid_t pid;
     for (int i = l; i <= r; ++i) {
         pid = fork();
@@ -167,7 +182,6 @@ void create_user_process(int l, int r) {
             std::cerr << "fork error" << std::endl;
             exit(-1);
         } else if (pid == 0) {
-            print("create user " << getpid() << std::endl);
             userPro[i] = {i, random_int(1, 10), getpid()};
             pushUserQue(i);
             user_process(i);
@@ -178,7 +192,8 @@ void create_user_process(int l, int r) {
     }
 }
 
-void create_restaurant_process(int l, int r) {
+void create_restaurant_process(int l, int r) 
+{
     pid_t pid;
     for (int i = l; i <= r; ++i) {
         pid = fork();
@@ -186,7 +201,6 @@ void create_restaurant_process(int l, int r) {
             std::cerr << "fork error" << std::endl;
             exit(-1);
         } else if (pid == 0) {
-            print("create rest " << getpid() << std::endl);
             restPro[i] = {i, random_int(1, 10), getpid()};
             pushRestQue(i);
             restaurant_process(i);
@@ -197,7 +211,8 @@ void create_restaurant_process(int l, int r) {
     }
 }
 
-void check_processes_status(pid_t sche_pid) {
+void check_processes_status(pid_t sche_pid) 
+{
     int status;
     pid_t pid = waitpid(sche_pid, &status, WNOHANG);
     if (pid == 0) {

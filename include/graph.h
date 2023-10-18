@@ -25,7 +25,6 @@ struct Graph {
     };
     int dx[D_NUM] = {-1, 1, 0, 0};
     int dy[D_NUM] = {0, 0, -1, 1};
-    std::vector<std::pair<int, int>> shortest_path;
     std::pair<int, int> parent[G_ROW][G_COL] = {};
 
     struct Point {
@@ -35,9 +34,14 @@ struct Graph {
             return step + est > p.step + p.est;
         }
     };
+
     std::pair<int, int> getValidPos();
+
     int H(int sx, int sy, int ex, int ey) { return abs(sx - ex) + abs(sy - ey); }
-    int astar(int sx, int sy, int ex, int ey, bool isPath);
+
+    int astar(int sx, int sy, int ex, int ey, bool isPath, std::vector<std::pair<int, int>> &shortest_path);
+
+    int astar(int sx, int sy, int ex, int ey);
 };
 
 extern Graph graph;

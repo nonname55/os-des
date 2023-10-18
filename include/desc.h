@@ -2,34 +2,32 @@
 #define DESC_H
 
 #include "macro.h"
+#include "header.h"
 
-#define MAX_REST_ORDER_NUM 64
-
-struct OrderDes {
-    int sx, sy, tx, ty, required_time, userId, riderId, restaurantId;
+struct RiderDes {
+    int riderID, posx, posy;
 };
 
 struct UserDes {
-    int x, y, id;
+    bool isNew;
+    int posx, posy, restID, reqTime, userID;
+};
+
+struct OrderDes {
+    int userID, riderID, reqArrTime, restID;
 };
 
 struct RestDes {
-    int x, y, id;
-    OrderDes orders[MAX_REST_ORDER_NUM];
+    int id;
+    std::vector<OrderDes> orders;
 };
 
-struct RiderDes {
-    int x, y, id;
-    OrderDes orders[MAX_REST_ORDER_NUM];
-};
+struct Des {
+    std::vector<RiderDes> riders;
+    std::vector<UserDes> users;
+    std::vector<RestDes> rest;
 
-struct Descriptor {
-    RiderDes riders[RIDER_NUM];
-    RestDes rests[RESTAURANT_NUM];
-    UserDes users[USER_NUM];
-
-    void log();
-    void restore();
+    void readFromLog();
 };
 
 #endif

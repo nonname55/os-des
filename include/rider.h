@@ -5,9 +5,11 @@
 #include "macro.h"
 #include "order.h"
 #include "msgque.h"
+#include "file.h"
+#include "process.h"
 
 struct Rider {
-    int posx, posy, id, speed;
+    int self_x, self_y, self_id, speed;
     std::deque<std::shared_ptr<Order>> orders;
     std::vector<std::shared_ptr<Order>> toDoOrder;
     pthread_mutex_t lock;
@@ -27,40 +29,35 @@ struct Rider {
         int _speed = 10,
         int _pid = 0
     ) {
-        this->posx = _posx;
-        this->posy = _posy;
-        this->id = _id;
+        this->self_x = _posx;
+        this->self_y = _posy;
+        this->self_id = _id;
         this->speed = _speed;
         this->pid = _pid;
     }
     bool shouldAcOrd(std::shared_ptr<Order>& order);
+
     void manage();
+    
     double H(const Order& order);
 
     void getOrderFromResta();
 
     void getDishFromResta();
+    
     void startToSend();
 
-    void sort_order() {
-        for (const auto& order : orders) {
-            order->weight = H(*order);
-        }
-        std::sort(orders.begin(), orders.end(), [](const auto& o1, const auto& o2) {
-            return o1->weight > o2->weight;
-        });
-    }
-
-    static bool check_newOrder() {
-        return false;
-    }
+    void sort_order();
     
     static void* deliver(void* arg);
-    void create_order(std::shared_ptr<Order>& newOrder) {
-        ThreadArgs args = {this, newOrder};
-        pthread_create(&(newOrder->thread), nullptr, deliver, &args);
-        pthread_cond_wait(&cond, &lock);
-        orders.push_back(std::move(newOrder));
+
+    void create_order(std::shared_ptr<Order>& newOrder);
+
+    int next_order();
+
+    static bool check_newOrder() 
+    {
+        return false;
     }
 };
 

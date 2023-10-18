@@ -1,78 +1,50 @@
-#include <sys/types.h>
-#include <unistd.h>
 #include <iostream>
-#include <signal.h>
 #include <sys/types.h>
-#include <sys/wait.h>
-#include <deque>
-#include <random>
-#include <algorithm>
+#include <sys/ipc.h>
+#include <sys/msg.h>
 
-int random_int(int l, int h) {
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distrib(l, h);
-    return distrib(gen);
+struct Msg {
+    long type;
+    int x;
+};
+
+int create_msgque(int svkey) {
+    key_t key = svkey;
+    int msgqid = msgget(key, IPC_CREAT | 0666);
+    if (msgqid == -1) {
+        std:: cerr << " error create message que, svkey = " << svkey << std::endl;
+        exit(-1);
+    }
+    return msgqid;
 }
 
-namespace PCB {
-    void child_process();
-    void create_process();
-    void schedule();
-
-    struct Process {
-        int pid;
-        int priority;
-
-        Process() {}
-        Process(
-            int _pid,
-            int _priority
-        ) {
-            pid = _pid;
-            priority = _priority;
-        }
-    };
-    std::deque<Process> processQue;
-
-    void child_process() {
-        std::cout << "child start" << std::endl;
-        kill(getpid(), SIGSTOP);
-        std::cout << "child wake up my pid:" << getpid() << std::endl;
+bool hasMessage(int svkey) {
+    int msgqid = create_msgque(svkey);
+    struct msqid_ds buf;
+    if (msgctl(msgqid, IPC_STAT, &buf) == -1) {
+        std::cerr << "Failed to get message queue status" << std::endl;
+        return false;
     }
-
-    void create_process() {
-        pid_t pid = fork();
-        if (pid == 0) {
-            child_process();
-            exit(0);
-        } else if (pid > 0) {
-            int status;
-            do {
-                waitpid(pid, &status, WUNTRACED);
-            } while (!WIFSTOPPED(status));
-            processQue.emplace_back(pid, random_int(1, 10));
-        }
-    }
-
-    void schedule() {
-        std::sort(processQue.begin(), processQue.end(), [](auto p1, auto p2) {
-            return p1.priority > p2.priority;
-        });
-        for (const auto& x : processQue) {
-            std::cout << x.pid << ' ' << x.priority << std::endl;
-        }
-        for (const auto& x : processQue) {
-            kill(x.pid, SIGCONT);
-        }
-    }
+    return buf.msg_qnum > 0;
 }
 
 int main() {
-    for (int i = 0; i < 10; ++i) {
-        PCB::create_process();
+    if (hasMessage(88)) {
+        std::cout << "yes\n";
+    } else {
+        std::cout << "no\n";
     }
-    PCB::schedule();
+    Msg msg;
+    msg.type = 1;
+    msg.x = 1;
+    int msgqid = create_msgque(88);
+    msgsnd(msgqid, &msg, sizeof(int), 0);
+
+    if (hasMessage(88)) {
+        std::cout << "yes\n";
+    } else {
+        std::cout << "no\n";
+    }
     
     return 0;
 }
