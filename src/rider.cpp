@@ -181,7 +181,7 @@ int Rider::cal_next_order()
     return transfer_order_id;
 }
 
-void erase_order(pthread_t tid)
+void Rider::erase_order(pthread_t tid)
 {
     pthread_join(tid, NULL);
 }
