@@ -23,7 +23,7 @@ int main()
     std::string outputDir = workdir + "output";
     const std::filesystem::path path = std::filesystem::path(outputDir);
     if (!(std::filesystem::exists(path) && std::filesystem::is_directory(path))) {
-        int re = mkdir(outputDir.c_str(), 0777);
+        mkdir(outputDir.c_str(), 0777);
     }
     chdir(outputDir.c_str());
     // int fd = open("/dev/null", O_RDWR);
@@ -54,16 +54,14 @@ int main()
     shm = (SHM_Data*)shmat(shmId, NULL, 0);
     init_shm(shm);
 
-    *order_count = 1;
+    *order_count = 0;
     *system_time = 0;
 
-    msgctl(msgget(SVKEY1, 0666), IPC_RMID, NULL);
-    msgctl(msgget(SVKEY2, 0666), IPC_RMID, NULL);
-    msgctl(msgget(SVKEY3, 0666), IPC_RMID, NULL);
-    msgctl(msgget(SVKEY4, 0666), IPC_RMID, NULL);
-    msgctl(msgget(SVKEY5, 0666), IPC_RMID, NULL);
-    msgctl(msgget(SVKEY6, 0666), IPC_RMID, NULL);
-    msgctl(msgget(SVKEY7, 0666), IPC_RMID, NULL);
+    MQ::delete_mq(INFO_DESC_SVKEY);
+    MQ::delete_mq(USER_TO_REST);
+    MQ::delete_mq(REST_TO_RIDER);
+    MQ::delete_mq(RIDER_INFO_BACK_SVKEY);
+    MQ::delete_mq(RIDER_INFO_FRONT_SVKEY);
 
     pid_t scheRider = fork();
     if (scheRider == 0) {
@@ -111,6 +109,14 @@ int main()
         pthread_mutex_unlock(&shm->restLock);
     } else if (scheRest < 0) {
         print("schedule restaurant fork error");
+    }
+
+    while (true) {
+        check_processes_status(scheRider);
+        check_processes_status(scheUser);
+        check_processes_status(scheRest);
+        sleep(1);
+        ++(*system_time);
     }
 
     while (true) {

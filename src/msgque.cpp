@@ -1,7 +1,8 @@
 #include "header.h"
 #include "macro.h"
+#include "msgque.h"
 
-int create_msgque(int svkey) 
+int MQ::create(int svkey) 
 {
     key_t key = svkey;
     int msgqid = msgget(key, IPC_CREAT | 0666);
@@ -12,9 +13,9 @@ int create_msgque(int svkey)
     return msgqid;
 }
 
-bool hasMessage(int svkey) 
+bool MQ::hasMessage(int svkey) 
 {
-    int msgqid = create_msgque(svkey);
+    int msgqid = create(svkey);
     struct msqid_ds buf;
     if (msgctl(msgqid, IPC_STAT, &buf) == -1) {
         std::cerr << "Failed to get message queue status" << std::endl;
@@ -23,3 +24,7 @@ bool hasMessage(int svkey)
     return buf.msg_qnum > 0;
 }
 
+void MQ::delete_mq(int svkey)
+{
+    msgctl(msgget(svkey, 0666), IPC_RMID, NULL);
+}

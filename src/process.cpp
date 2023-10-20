@@ -97,8 +97,9 @@ void restaurant_process(int id)
         pthread_cond_signal(&(shm->restConds[id]));
         pthread_cond_wait(&(shm->restConds[id]), &(shm->restLock));
 
-        auto validPos = graph.getValidPos();
-        restaurant = {validPos.first, validPos.second, id};
+        // auto validPos = graph.getValidPos();
+        // restaurant = {validPos.first, validPos.second, id};
+        restaurant.self_id = id;
         restaurant.manage();
     }
 
@@ -113,8 +114,9 @@ void user_process(int id)
         pthread_cond_signal(&(shm->userConds[id]));
         pthread_cond_wait(&(shm->userConds[id]), &(shm->userLock));
 
-        auto validPos = graph.getValidPos();
-        user = {validPos.first, validPos.second, id};
+        // auto validPos = graph.getValidPos();
+        // user = {validPos.first, validPos.second, id};
+        user.self_id = id;
         user.manage();
     }
 

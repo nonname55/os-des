@@ -4,28 +4,22 @@
 #include "header.h"
 #include "macro.h"
 #include "util.h"
+/*
+0道路
+1草地
+2顾客
+3接收点
+4饭店
+*/
 
-#define G_ROW 10
-#define G_COL 10
-#define D_NUM 4
-#define POS_ERROR '#'
-
-struct Graph {
-    char bupt_map[G_ROW][G_COL + 1] = {
-        {".........."},
-        {"...#####.."},
-        {".......#.."},
-        {".......#.."},
-        {".########."},
-        {".....#...."},
-        {"..#..####."},
-        {"..#..#...."},
-        {"..####...."},
-        {".........."},
-    };
-    int dx[D_NUM] = {-1, 1, 0, 0};
-    int dy[D_NUM] = {0, 0, -1, 1};
-    std::pair<int, int> parent[G_ROW][G_COL] = {};
+#define G_USER 2
+#define G_RECEIV 3
+#define G_REST 4
+namespace Graph {
+    extern std::vector<std::vector<int>> graph;
+    extern int dx[4];
+    extern int dy[4];
+    extern std::vector<int> error_pos;
 
     struct Point {
         int x, y;
@@ -35,15 +29,11 @@ struct Graph {
         }
     };
 
-    std::pair<int, int> getValidPos();
+    int H(int sx, int sy, int ex, int ey);
 
-    int H(int sx, int sy, int ex, int ey) { return abs(sx - ex) + abs(sy - ey); }
+    int astar(int sx, int sy, int ex, int ey, const std::vector<std::vector<int>> &graph);
 
-    int astar(int sx, int sy, int ex, int ey, bool isPath, std::vector<std::pair<int, int>> &shortest_path);
-
-    int astar(int sx, int sy, int ex, int ey);
+    std::pair<std::pair<int, int>, std::pair<int, int>> get_valid_pos(int who);
 };
-
-extern Graph graph;
 
 #endif

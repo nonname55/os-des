@@ -8,16 +8,9 @@
 #include "file.h"
 
 struct Restaurant {
-    int posx, posy, id;
-    std::vector<Order> orders,confOrders;
-    std::vector<orderMsg> confOrdersQue,unArrived;
+    int self_x, self_y, self_id, self_get_x, self_get_y;
+    std::vector<Order> orders;
     Restaurant() {}
-    Restaurant(int _posx, int _posy, int _id) 
-    {
-        this->posx = _posx;
-        this->posy = _posy;
-        this->id = _id;
-    }
     
     void manage();
     bool haveArrived() 

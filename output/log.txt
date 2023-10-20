@@ -1,169 +1,21 @@
-user 1 2 4
-user 2 5 6
-user 3 3 0
-rest
-rest
-user 1 4 0
-user 2 5 4
-user 3 5 3
-rest
-user 1 7 0
-user 2 6 4
-user 3 7 1
-rest
-rest
-rider 0 1
-rest
-user 1 7 9
-user 2 6 4
-user 3 0 2
-rest
-rest
-rest
-user 1 5 9
-user 2 8 6
-user 3 7 4
-rider 0 3
-rest
-rider 0 3
-user 1 0 4
-user 2 5 9
-user 3 1 1
-rest
-user 1 2 1
-user 2 3 9
-user 3 8 9
-user 1 3 4
-user 2 2 1
-user 3 9 6
-rest
-rest
-rest
-user 1 6 9
-user 2 5 4
-user 3 3 8
-rest
-rest
-rider 0 1
-rest
-rider 0 1
-user 1 3 1
-user 2 2 0
-user 3 8 0
-rest
-rest
-rest
-rider 0 2
-user 1 0 6
-user 2 3 3
-user 3 2 6
-rest
-rest
-rest
-user 1 9 8
-user 2 0 0
-user 3 9 4
-rider 0 3
-rest
-rest
-rest
-user 1 5 3
-user 2 5 3
-user 3 1 8
-rest
-rest
-rider 0 3
-rest
-user 1 3 3
-user 2 0 9
-user 3 1 0
-rider 0 3
-rest
-user 1 7 4
-user 2 8 9
-user 3 5 0
-rest
-rest
-rest
-rest
-rest
-user 1 3 0
-user 2 1 0
-user 3 2 0
-rest
-rest
-rest
-user 1 2 1
-user 2 9 9
-user 3 6 9
-rider 0 1
-rest
-rest
-rest
-user 1 3 4
-user 2 3 4
-user 3 0 0
-rest
-rest
-rest
-user 1 8 1
-user 2 3 8
-user 3 8 7
-rest
-rider 0 3
-rest
-rest
-user 1 0 7
-user 2 9 1
-user 3 7 0
-rest
-rest
-rider 0 1
-rest
-user 1 0 5
-user 2 5 0
-user 3 5 8
-rider 0 3
-rest
-rider 0 3
-user 1 8 6
-user 2 7 6
-user 3 3 4
-rest
-rest
-rest
-rest
-rest
-user 1 5 8
-user 2 4 9
-user 3 9 3
-rest
-rest
-rest
-user 1 4 0
-user 2 5 2
-user 3 5 1
-rest
-rider 0 2
-rest
-user 1 8 0
-user 2 0 3
-user 3 7 6
-user 1 6 4
-user 2 9 0
-rest
-user 3 7 8
-rest
-rest
-user 1 5 6
-user 2 2 6
-user 3 7 6
-rest
-rider 0 2
-user 1 3 9
-user 2 3 8
-user 3 2 9
-rest
-rider 0 2
-rest
-rest
+2023-10-19 21:03:10		子进程812正在运行
+2023-10-19 21:03:12		子进程812正在运行
+2023-10-19 21:03:14		子进程812正在运行
+2023-10-19 21:03:16		子进程812正在运行
+2023-10-19 21:03:18		子进程812正在运行
+2023-10-19 21:03:20		子进程812正在运行
+2023-10-19 21:03:22		子进程812正在运行
+2023-10-19 21:03:24		子进程812正在运行
+2023-10-19 21:03:26		子进程812正在运行
+2023-10-19 21:03:28		子进程812正在运行
+2023-10-19 21:03:30		子进程812正在运行
+2023-10-19 21:03:32		子进程812正在运行
+2023-10-19 21:03:34		子进程812正在运行
+2023-10-19 21:03:36		子进程812正在运行
+2023-10-19 21:03:38		子进程812正在运行
+2023-10-19 21:03:40		子进程812正在运行
+2023-10-19 21:03:42		子进程812正在运行
+2023-10-19 21:03:44		子进程812正在运行
+2023-10-19 21:03:46		子进程812正在运行
+2023-10-19 21:03:48		子进程812正在运行
+2023-10-19 21:03:50		子进程812正在运行

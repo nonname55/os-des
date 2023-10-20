@@ -17,12 +17,6 @@
 #define USERL 0
 #define USERH USER_NUM - 1
 
-//graph
-#define G_ROW 10
-#define G_COL 10
-#define D_NUM 4
-#define POS_ERROR '#'
-
 //test
 #define DEBUG std::cout << "debug" << std::endl;
 
