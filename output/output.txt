@@ -2,58 +2,31 @@ rider
 debug
 rider
 rider
-用户 1 点了饭店 3 的外卖，我在9 3
-debug
-debug
-这里是饭店 3 接收到了用户 1 的订单，位于 9 3
-rider
-rider
-rider
-debug
 debug
 debug
 rider
 rider
+debug
 rider
 debug
-用户 2 点了饭店 1 的外卖，我在19 15
+debug
 rider
 rider
 rider
+debug
+debug
+debug
+用户 1 点了饭店 3 的外卖，我在12 7
 rider
 rider
 rider
+debug
+debug
+debug
+这里是饭店 3 接收到了用户 1 的订单，位于 12 7
 rider
 rider
 rider
-rider
-rider
-rider
-rider
-rider
-rider
-用户 2 点了饭店 2 的外卖，我在19 9
-用户 3 点了饭店 1 的外卖，我在9 17
-rider
-rider
-rider
-rider
-rider
-rider
-rider
-rider
-rider
-用户 2 点了饭店 2 的外卖，我在9 17
-rider
-rider
-rider
-rider
-rider
-rider
-用户 2 点了饭店 2 的外卖，我在1 15
-rider
-rider
-rider
-rider
-rider
-rider
+debug
+debug
+debug
