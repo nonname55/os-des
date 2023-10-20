@@ -16,9 +16,9 @@ void Restaurant::manage()
         int required_time = random_int(*system_time, (*system_time) + 50);
         int done_time = random_int(*system_time, (*system_time) + 5);
         Order new_order(order_msg.user_x, order_msg.user_y, required_time, done_time);
-        print("这里是饭店 " << self_id << " 接收到了用户 " 
-                << order_msg.user_id << " 的订单，位于 " 
-                << order_msg.user_x << ' ' << order_msg.user_y << std::endl);
+        // pri.user_id << " 的订单，位于 " 
+        //         << order_msgnt("这里是饭店 " << self_id << " 接收到了用户 " 
+        //         << order_msg.user_x << ' ' << order_msg.user_y << std::endl);
         order_msg.rest_x = self_x;
         order_msg.rest_y = self_y;
         order_msg.rest_get_x = self_get_x;

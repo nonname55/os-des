@@ -4,7 +4,7 @@
 #include <mutex>
 
 //basic
-#define RIDER_NUM 2
+#define RIDER_NUM 1
 #define RESTAURANT_NUM 3
 #define USER_NUM 3
 

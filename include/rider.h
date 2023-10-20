@@ -36,7 +36,7 @@ struct Rider {
         this->speed = _speed;
         this->pid = _pid;
     }
-    bool is_accept_order(std::shared_ptr<Order>& order);
+    bool is_accept_order();
 
     void manage();
     

@@ -1,6 +1,7 @@
 #include <sys/msg.h>
 #include <random>
 #include <unistd.h>
+#include <iostream>
 
 struct rider_info_struct {
     long type;
@@ -22,8 +23,9 @@ int main() {
     int msqid = msgget(81, IPC_CREAT | 0666);
     while (true) {
         rider_info_struct ri;
-        ri = {random_int(1, 2), 1, 0, 0};
+        ri = {1, 1, 0, 0};
         msgsnd(msqid, &ri, 12, 0);
+        std::cout << "write" << ri.rider_x << ' ' << ri.rider_y << std::endl;
         sleep(1);
     }
     
