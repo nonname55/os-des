@@ -1,0 +1,695 @@
+rider
+user exe
+restaurant exe
+rider
+rider
+用户 1 点了饭店 2 的外卖，我在1 5
+user exe
+用户 2 点了饭店 3 的外卖，我在9 17
+user exe
+restaurant exe
+这里是饭店 2 接收到了用户 1 的订单，位于 1 5
+restaurant exe
+这里是饭店 3 接收到了用户 2 的订单，位于 9 17
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+user exe
+用户 3 点了饭店 2 的外卖，我在4 17
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+这里是饭店 2 接收到了用户 3 的订单，位于 4 17
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+user exe
+user exe
+user exe
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+user exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+用户 1 点了饭店 1 的外卖，我在8 0
+user exe
+user exe
+rider
+rider
+rider
+restaurant exe
+这里是饭店 1 接收到了用户 1 的订单，位于 8 0
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+user exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+user exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+用户 1 点了饭店 2 的外卖，我在16 3
+user exe
+user exe
+用户 3 点了饭店 1 的外卖，我在17 12
+rider
+rider
+rider
+restaurant exe
+这里是饭店 1 接收到了用户 3 的订单，位于 17 12
+restaurant exe
+这里是饭店 2 接收到了用户 1 的订单，位于 16 3
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+user exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+用户 2 点了饭店 2 的外卖，我在1 5
+user exe
+用户 3 点了饭店 3 的外卖，我在19 0
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+这里是饭店 2 接收到了用户 2 的订单，位于 1 5
+restaurant exe
+这里是饭店 3 接收到了用户 3 的订单，位于 19 0
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+用户 2 点了饭店 2 的外卖，我在18 17
+user exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+这里是饭店 2 接收到了用户 2 的订单，位于 18 17
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+user exe
+用户 3 点了饭店 2 的外卖，我在17 12
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+这里是饭店 2 接收到了用户 3 的订单，位于 17 12
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+user exe
+用户 3 点了饭店 1 的外卖，我在12 7
+rider
+rider
+rider
+restaurant exe
+这里是饭店 1 接收到了用户 3 的订单，位于 12 7
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+用户 2 点了饭店 3 的外卖，我在9 17
+user exe
+用户 3 点了饭店 2 的外卖，我在17 12
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+这里是饭店 2 接收到了用户 3 的订单，位于 17 12
+restaurant exe
+这里是饭店 3 接收到了用户 2 的订单，位于 9 17
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+user exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+user exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+用户 1 点了饭店 3 的外卖，我在9 17
+user exe
+user exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+这里是饭店 3 接收到了用户 1 的订单，位于 9 17
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+用户 1 点了饭店 3 的外卖，我在4 17
+user exe
+user exe
+用户 3 点了饭店 3 的外卖，我在1 5
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+这里是饭店 3 接收到了用户 1 的订单，位于 4 17
+这里是饭店 3 接收到了用户 3 的订单，位于 1 5
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+user exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+用户 2 点了饭店 1 的外卖，我在19 0
+user exe
+rider
+rider
+rider
+restaurant exe
+这里是饭店 1 接收到了用户 2 的订单，位于 19 0
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+用户 1 点了饭店 1 的外卖，我在19 0
+user exe
+user exe
+rider
+rider
+rider
+restaurant exe
+这里是饭店 1 接收到了用户 1 的订单，位于 19 0
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+用户 1 点了饭店 1 的外卖，我在18 17
+user exe
+用户 2 点了饭店 3 的外卖，我在3 4
+user exe
+用户 3 点了饭店 1 的外卖，我在16 3
+rider
+rider
+rider
+restaurant exe
+这里是饭店 1 接收到了用户 1 的订单，位于 18 17
+这里是饭店 1 接收到了用户 3 的订单，位于 16 3
+restaurant exe
+restaurant exe
+这里是饭店 3 接收到了用户 2 的订单，位于 3 4
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+用户 1 点了饭店 1 的外卖，我在17 12
+user exe
+user exe
+rider
+rider
+rider
+restaurant exe
+这里是饭店 1 接收到了用户 1 的订单，位于 17 12
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+user exe
+用户 3 点了饭店 2 的外卖，我在19 15
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+这里是饭店 2 接收到了用户 3 的订单，位于 19 15
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+user exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+用户 1 点了饭店 3 的外卖，我在19 9
+user exe
+user exe
+用户 3 点了饭店 3 的外卖，我在1 5
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+这里是饭店 3 接收到了用户 1 的订单，位于 19 9
+这里是饭店 3 接收到了用户 3 的订单，位于 1 5
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+用户 1 点了饭店 2 的外卖，我在9 3
+user exe
+用户 2 点了饭店 1 的外卖，我在17 12
+user exe
+用户 3 点了饭店 2 的外卖，我在13 11
+rider
+rider
+rider
+restaurant exe
+这里是饭店 1 接收到了用户 2 的订单，位于 17 12
+restaurant exe
+这里是饭店 2 接收到了用户 1 的订单，位于 9 3
+这里是饭店 2 接收到了用户 3 的订单，位于 13 11
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+user exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+用户 1 点了饭店 2 的外卖，我在13 11
+user exe
+user exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+这里是饭店 2 接收到了用户 1 的订单，位于 13 11
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+user exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+用户 2 点了饭店 2 的外卖，我在8 9
+user exe
+用户 3 点了饭店 1 的外卖，我在8 12
+rider
+rider
+rider
+restaurant exe
+这里是饭店 1 接收到了用户 3 的订单，位于 8 12
+restaurant exe
+这里是饭店 2 接收到了用户 2 的订单，位于 8 9
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+用户 1 点了饭店 3 的外卖，我在8 12
+user exe
+user exe
+用户 3 点了饭店 1 的外卖，我在9 17
+rider
+rider
+rider
+restaurant exe
+这里是饭店 1 接收到了用户 3 的订单，位于 9 17
+restaurant exe
+restaurant exe
+这里是饭店 3 接收到了用户 1 的订单，位于 8 12
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+user exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+用户 2 点了饭店 3 的外卖，我在1 15
+user exe
+用户 3 点了饭店 2 的外卖，我在1 5
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+这里是饭店 2 接收到了用户 3 的订单，位于 1 5
+restaurant exe
+这里是饭店 3 接收到了用户 2 的订单，位于 1 15
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+restaurant exe
+user exe
+user exe
+用户 2 点了饭店 3 的外卖，我在19 15
+user exe
+用户 3 点了饭店 2 的外卖，我在19 9
+rider
+rider
+rider
+restaurant exe
+restaurant exe
+这里是饭店 2 接收到了用户 3 的订单，位于 19 9
+restaurant exe
+这里是饭店 3 接收到了用户 2 的订单，位于 19 15

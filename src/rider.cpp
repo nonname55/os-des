@@ -12,54 +12,66 @@ bool Rider::is_accept_order(std::shared_ptr<Order>& order)
 
 void Rider::manage() 
 {
-    print("rider" << std::endl);
-    //阻塞读取骑手位置，前端发来骑手位置才执行
-    // MQ::rider_info_struct rider_info;
-    // MQ::read(MQ::create(RIDER_INFO_FRONT_SVKEY), rider_info, self_id, true);
-    // pthread_mutex_lock(&lock);
+    pthread_mutex_lock(&lock);
 
-    // self_x = rider_info.rider_x;
-    // self_y = rider_info.rider_y;
-
-    // if (rider_info.event_type == 0) {
-    //     if (orders[0]->is_take)
-    //         orders.pop_front();
-    //     else
-    //         orders[0]->is_take = true;
-    // }
+    MQ::rider_info_struct rider_info;
+    if (MQ::read(MQ::create(RIDER_INFO_FRONT_SVKEY), rider_info, self_id, false) >= 0) {
+        self_x = rider_info.rider_x;
+        self_y = rider_info.rider_y;
+        if (rider_info.event_type == 0) {
+            //骑手到指定位置
+            if (orders[0]->is_take) 
+                orders.pop_front();
+            else 
+                orders[0]->is_take = true;
+        } else if (rider_info.event_type == 1) {
+            //有新订单
+            get_order();
+        }
+        int next_order_id = cal_next_order();
+        if (next_order_id != -1) {
+            pthread_cond_signal(&orders[0]->cond);
+            pthread_cond_wait(&cond, &lock);
+        }
+    } else {
+        if (is_waiting) {
+            if (*system_time >= orders[0]->done_time) {
+                is_waiting = false;
+                orders[0]->is_take = true;
+                pthread_cond_signal(&orders[0]->cond);
+                pthread_cond_wait(&cond, &lock);
+            }
+        }
+    }
     
-    // MQ::info_desc_struct order_info;
-    // int msgqid = MQ::create(REST_TO_RIDER);
-    // std::vector<MQ::info_desc_struct> abandon;
-    // while (MQ::read(msgqid, order_info, 0, false) >= 0) {
-    //     std::shared_ptr<Order> new_order = std::make_shared<Order>();
-    //     new_order->order_id = order_info.order_id;
-    //     new_order->user_x = order_info.user_get_x;
-    //     new_order->user_y = order_info.user_get_y;
-    //     new_order->user_id = order_info.user_id;
-    //     new_order->rest_id = order_info.rest_id;
-    //     new_order->rest_x = order_info.rest_get_x;
-    //     new_order->rest_y = order_info.rest_get_y;
-    //     new_order->required_time = order_info.required_time;
-    //     new_order->done_time = order_info.done_time;
-    //     if (is_accept_order(new_order)) {
-    //         create_order(new_order);
-    //     } else {
-    //         abandon.emplace_back(order_info);
-    //     }
-    // }
-    // for (const auto &ao : abandon) {
-    //     MQ::write(MQ::create(REST_TO_RIDER), ao);
-    // }
-    // abandon.clear();
+    pthread_mutex_unlock(&lock);
+}
 
-    // int next_order_id = cal_next_order();
-    // if (next_order_id != -1) {
-    //     pthread_cond_signal(&orders[0]->cond);
-    //     pthread_cond_wait(&cond, &lock);
-    // }
-    
-    // pthread_mutex_unlock(&lock);
+void Rider::get_order() {
+    MQ::info_desc_struct order_info;
+    int msgqid = MQ::create(REST_TO_RIDER);
+    std::vector<MQ::info_desc_struct> abandon;
+    while (MQ::read(msgqid, order_info, 0, false) >= 0) {
+        std::shared_ptr<Order> new_order = std::make_shared<Order>();
+        new_order->order_id = order_info.order_id;
+        new_order->user_x = order_info.user_get_x;
+        new_order->user_y = order_info.user_get_y;
+        new_order->user_id = order_info.user_id;
+        new_order->rest_id = order_info.rest_id;
+        new_order->rest_x = order_info.rest_get_x;
+        new_order->rest_y = order_info.rest_get_y;
+        new_order->required_time = order_info.required_time;
+        new_order->done_time = order_info.done_time;
+        if (is_accept_order(new_order)) {
+            create_order(new_order);
+        } else {
+            abandon.emplace_back(order_info);
+        }
+    }
+    for (const auto &ao : abandon) {
+        MQ::write(MQ::create(REST_TO_RIDER), ao);
+    }
+    abandon.clear();
 }
 
 double Rider::H(const Order& order) 
@@ -79,12 +91,20 @@ void* Rider::deliver(void* arg)
     pthread_cond_signal(&(rider->cond));
     pthread_cond_wait(&(order->cond), &(rider->lock));
 
+    int msqid = MQ::create(RIDER_INFO_BACK_SVKEY);
+    MQ::rider_info_struct rider_info;
     if (order->is_take) {
-
+        rider_info = {rider->self_id, 2, order->user_x, order->user_y};
+        MQ::write(msqid, rider_info);
     } else {
-
-    }
-
+        if (*system_time >= order->done_time) {
+            rider_info = {rider->self_id, 3, order->rest_x, order->rest_y};
+            MQ::write(msqid, rider_info);
+        } else {
+            rider->is_waiting = true;
+        }
+    } 
+    
     pthread_cond_signal(&(rider->cond));
     pthread_mutex_unlock(&(rider->lock));
     return nullptr;

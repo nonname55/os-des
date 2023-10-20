@@ -5,7 +5,6 @@ Restaurant restaurant;
 
 void Restaurant::manage() 
 {
-    print("restaurant exe" << std::endl);
     auto self_pos = Graph::get_valid_pos(G_REST);
     self_x = self_pos.first.first;
     self_y = self_pos.first.second;
@@ -26,6 +25,8 @@ void Restaurant::manage()
         order_msg.rest_get_y = self_get_y;
         order_msg.required_time = required_time;
         order_msg.done_time = done_time;
-        // MQ::write(MQ::create(REST_TO_RIDER), order_msg);
+        MQ::write(MQ::create(REST_TO_RIDER), order_msg);
+        order_msg.type = 2;
+        MQ::write(MQ::create(INFO_DESC_SVKEY), order_msg);
     }
 }

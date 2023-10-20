@@ -16,6 +16,7 @@ struct Rider {
     pthread_cond_t cond;
     bool sending=false;
     bool isNewOrder;
+    bool is_waiting = false;
     pid_t pid;
     struct ThreadArgs {
         Rider* rider;
@@ -41,7 +42,7 @@ struct Rider {
     
     double H(const Order& order);
 
-    void getOrderFromResta();
+    void get_order();
 
     void getDishFromResta();
     
@@ -52,6 +53,8 @@ struct Rider {
     static void* deliver(void* arg);
 
     void create_order(std::shared_ptr<Order>& newOrder);
+
+    void erase_order(pthread_t tid);
 
     int cal_next_order();
 

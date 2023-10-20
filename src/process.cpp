@@ -24,26 +24,38 @@ int create_shm(const char *path, int index, int size)
 
 void init_shm(SHM_Data* shm) 
 {
-    pthread_mutexattr_t mattr; 
-    pthread_condattr_t cattr; 
-    pthread_mutexattr_init(&mattr); 
-    pthread_condattr_init(&cattr); 
-    pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED); 
-    pthread_condattr_setpshared(&cattr, PTHREAD_PROCESS_SHARED); 
-    pthread_mutex_init(&shm->riderLock, &mattr);
-    pthread_mutex_init(&shm->userLock, &mattr);
-    pthread_mutex_init(&shm->restLock, &mattr);
-    pthread_cond_init(&shm->riderCond, &cattr);
-    pthread_cond_init(&shm->userCond, &cattr);
-    pthread_cond_init(&shm->restCond, &cattr);
+    pthread_mutexattr_t rider_mattr; 
+    pthread_condattr_t rider_cattr; 
+    pthread_mutexattr_t user_mattr; 
+    pthread_condattr_t user_cattr; 
+    pthread_mutexattr_t rest_mattr; 
+    pthread_condattr_t rest_cattr; 
+    pthread_mutexattr_init(&rider_mattr); 
+    pthread_condattr_init(&rider_cattr);
+    pthread_mutexattr_init(&user_mattr); 
+    pthread_condattr_init(&user_cattr); 
+    pthread_mutexattr_init(&rest_mattr); 
+    pthread_condattr_init(&rest_cattr);  
+    pthread_mutexattr_setpshared(&rider_mattr, PTHREAD_PROCESS_SHARED); 
+    pthread_condattr_setpshared(&rider_cattr, PTHREAD_PROCESS_SHARED); 
+    pthread_mutexattr_setpshared(&user_mattr, PTHREAD_PROCESS_SHARED); 
+    pthread_condattr_setpshared(&user_cattr, PTHREAD_PROCESS_SHARED); 
+    pthread_mutexattr_setpshared(&rest_mattr, PTHREAD_PROCESS_SHARED); 
+    pthread_condattr_setpshared(&rest_cattr, PTHREAD_PROCESS_SHARED); 
+    pthread_mutex_init(&shm->riderLock, &rider_mattr);
+    pthread_mutex_init(&shm->userLock, &user_mattr);
+    pthread_mutex_init(&shm->restLock, &rest_mattr);
+    pthread_cond_init(&shm->riderCond, &rider_cattr);
+    pthread_cond_init(&shm->userCond, &user_cattr);
+    pthread_cond_init(&shm->restCond, &rest_cattr);
     for (int i = 0; i <= RIDER_NUM; ++i) {
-        pthread_cond_init(&shm->riderConds[i], &cattr);
+        pthread_cond_init(&shm->riderConds[i], &rider_cattr);
     }
     for (int i = 0; i <= USER_NUM; ++i) {
-        pthread_cond_init(&shm->userConds[i], &cattr);
+        pthread_cond_init(&shm->userConds[i], &user_cattr);
     }
     for (int i = 0; i <= RESTAURANT_NUM; ++i) {
-        pthread_cond_init(&shm->restConds[i], &cattr);
+        pthread_cond_init(&shm->restConds[i], &rest_cattr);
     }
 }
 
