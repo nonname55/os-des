@@ -91,14 +91,14 @@ void rider_process(int id)
 {
     pthread_mutex_lock(&(shm->riderLock));
     while (true) {
-        pthread_cond_signal(&(shm->riderConds[id]));
+        pthread_cond_signal(&(shm->riderCond));
         pthread_cond_wait(&(shm->riderConds[id]), &(shm->riderLock));
 
         rider.self_id = id;
         rider.manage();
     }
 
-    pthread_cond_signal(&(shm->riderConds[id]));
+    pthread_cond_signal(&(shm->riderCond));
     pthread_mutex_unlock(&(shm->riderLock));
 }
 
@@ -106,7 +106,7 @@ void restaurant_process(int id)
 {
     pthread_mutex_lock(&(shm->restLock));
     while (true) {
-        pthread_cond_signal(&(shm->restConds[id]));
+        pthread_cond_signal(&(shm->restCond));
         pthread_cond_wait(&(shm->restConds[id]), &(shm->restLock));
 
         // auto validPos = graph.getValidPos();
@@ -115,7 +115,7 @@ void restaurant_process(int id)
         restaurant.manage();
     }
 
-    pthread_cond_signal(&(shm->restConds[id]));
+    pthread_cond_signal(&(shm->restCond));
     pthread_mutex_unlock(&(shm->restLock));
 }
 
@@ -123,7 +123,7 @@ void user_process(int id)
 {
     pthread_mutex_lock(&(shm->userLock));
     while (true) {
-        pthread_cond_signal(&(shm->userConds[id]));
+        pthread_cond_signal(&(shm->userCond));
         pthread_cond_wait(&(shm->userConds[id]), &(shm->userLock));
 
         // auto validPos = graph.getValidPos();
@@ -132,7 +132,7 @@ void user_process(int id)
         user.manage();
     }
 
-    pthread_cond_signal(&(shm->userConds[id]));
+    pthread_cond_signal(&(shm->userCond));
     pthread_mutex_unlock(&(shm->userLock));
 }
 
@@ -140,7 +140,7 @@ void scheduleRider()
 {
     for (int i = 1; i <= RIDER_NUM; ++i) {
         pthread_cond_signal(&(shm->riderConds[i]));
-        pthread_cond_wait(&(shm->riderConds[i]), &(shm->riderLock));
+        pthread_cond_wait(&(shm->riderCond), &(shm->riderLock));
     }
 }
 
@@ -148,7 +148,7 @@ void scheduleUser()
 {
     for (int i = 1; i <= USER_NUM; ++i) {
         pthread_cond_signal(&(shm->userConds[i]));
-        pthread_cond_wait(&(shm->userConds[i]), &(shm->userLock));
+        pthread_cond_wait(&(shm->userCond), &(shm->userLock));
     }
 }
 
@@ -156,7 +156,7 @@ void scheduleRest()
 {
     for (int i = 1; i <= RESTAURANT_NUM; ++i) {
         pthread_cond_signal(&(shm->restConds[i]));
-        pthread_cond_wait(&(shm->restConds[i]), &(shm->restLock));
+        pthread_cond_wait(&(shm->restCond), &(shm->restLock));
     }
 }
 
@@ -182,7 +182,7 @@ void create_rider_process(int l, int r)
             rider_process(i);
             exit(0);
         } else if (pid > 0) {
-            pthread_cond_wait(&(shm->riderConds[i]), &(shm->riderLock));
+            pthread_cond_wait(&(shm->riderCond), &(shm->riderLock));
         }
     }
 }
@@ -201,7 +201,7 @@ void create_user_process(int l, int r)
             user_process(i);
             exit(0);
         } else if (pid > 0) {
-            pthread_cond_wait(&(shm->userConds[i]), &(shm->userLock));
+            pthread_cond_wait(&(shm->userCond), &(shm->userLock));
         }
     }
 }
@@ -220,7 +220,7 @@ void create_restaurant_process(int l, int r)
             restaurant_process(i);
             exit(0);
         } else if (pid > 0) {
-            pthread_cond_wait(&(shm->restConds[i]), &(shm->restLock));
+            pthread_cond_wait(&(shm->restCond), &(shm->restLock));
         }
     }
 }
