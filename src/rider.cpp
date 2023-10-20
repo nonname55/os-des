@@ -15,7 +15,7 @@ void Rider::manage()
     pthread_mutex_lock(&lock);
 
     MQ::rider_info_struct rider_info;
-    if (MQ::read(MQ::create(RIDER_INFO_BACK_SVKEY), rider_info, self_id, false) >= 0) {
+    if (MQ::read(MQ::create(RIDER_INFO_FRONT_SVKEY), rider_info, self_id, false) >= 0) {
         self_x = rider_info.rider_y;
         self_y = rider_info.rider_x;
         // if (rider_info.event_type == 0) {
@@ -41,7 +41,7 @@ void Rider::manage()
     }
     get_order();
     if (orders.size() > 0) {
-        int msqid = MQ::create(RIDER_INFO_FRONT_SVKEY);
+        int msqid = MQ::create(RIDER_INFO_BACK_SVKEY);
         MQ::rider_info_struct rider_info;
         if (orders[0]->is_take) {
             rider_info = {self_id, 2, orders[0]->user_y, orders[0]->user_x};
