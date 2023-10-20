@@ -55,6 +55,8 @@ struct Rider {
 
     int cal_next_order();
 
+    int cal_delivery_time(int x, int y, const std::shared_ptr<Order> &porder);
+
     static bool check_newOrder() 
     {
         return false;

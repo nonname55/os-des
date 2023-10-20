@@ -27,7 +27,8 @@ namespace MQ {
         type 代表骑手id
         event_type == 0 : 骑手到达指定位置 （前端->后端）
         event_type == 1 : 有新订单产生    （前端->后端）
-
+        event_type == 2 : 送餐           （后端->前端） 
+        event_type == 3 : 取餐            （后端->前端）
         后端->前端 骑手下一步位置 type是骑手id
     */
     #define RIDER_INFO_FRONT_SVKEY 81 //前端发信息

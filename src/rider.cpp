@@ -59,7 +59,7 @@ void Rider::manage()
     //     pthread_cond_wait(&cond, &lock);
     // }
     
-    pthread_mutex_unlock(&lock);
+    // pthread_mutex_unlock(&lock);
 }
 
 double Rider::H(const Order& order) 
@@ -108,6 +108,16 @@ void Rider::create_order(std::shared_ptr<Order>& newOrder)
     orders.push_back(std::move(newOrder));
 }
 
+int Rider::cal_delivery_time(int x, int y, const std::shared_ptr<Order> &porder)
+{
+    if (porder->is_take)
+        return Graph::astar(x, y, porder->user_x, porder->user_y, Graph::graph);
+    int time_to_rest = Graph::astar(x, y, porder->rest_x, porder->rest_y, Graph::graph);
+    time_to_rest += std::max(porder->done_time - (*system_time) - time_to_rest, 0);
+    return time_to_rest + 
+        Graph::astar(porder->rest_x, porder->rest_y, porder->user_x, porder->user_y, Graph::graph);
+}
+
 int Rider::cal_next_order()
 {
     int orders_size = orders.size();
@@ -115,17 +125,11 @@ int Rider::cal_next_order()
         return -1;
     if (orders_size == 1)
         return orders[0]->order_id;
-    
-    auto cal_delivery_time = [](int x, int y, const std::shared_ptr<Order> &porder) {
-        if (porder->is_take) 
-            return Graph::astar(x, y, porder->user_x, porder->user_y, Graph::graph);
-        int time_to_rest = Graph::astar(x, y, porder->rest_x, porder->rest_y, Graph::graph);
-        time_to_rest += std::max(porder->done_time - (*system_time) - time_to_rest, 0);
-        return time_to_rest + 
-            Graph::astar(porder->rest_x, porder->rest_y, porder->user_x, porder->user_y, Graph::graph);
-    };
-
-    if (cal_delivery_time(self_x, self_y, orders[0])) 
+    std::sort(orders.begin(), orders.end(), 
+        [](std::shared_ptr<Order> porder1, std::shared_ptr<Order> porder2) {
+            return porder1->required_time < porder2->required_time;
+        });
+    if (cal_delivery_time(self_x, self_y, orders[0]) + (*system_time) >= orders[0]->required_time) 
         return orders[0]->order_id;
     
     int transfer_order_id = orders[0]->order_id, ind;

@@ -36,13 +36,13 @@ void init_shm(SHM_Data* shm)
     pthread_cond_init(&shm->riderCond, &cattr);
     pthread_cond_init(&shm->userCond, &cattr);
     pthread_cond_init(&shm->restCond, &cattr);
-    for (int i = 0; i < P_NUM; ++i) {
+    for (int i = 0; i <= RIDER_NUM; ++i) {
         pthread_cond_init(&shm->riderConds[i], &cattr);
     }
-    for (int i = 0; i < P_NUM; ++i) {
+    for (int i = 0; i <= USER_NUM; ++i) {
         pthread_cond_init(&shm->userConds[i], &cattr);
     }
-    for (int i = 0; i < P_NUM; ++i) {
+    for (int i = 0; i <= RESTAURANT_NUM; ++i) {
         pthread_cond_init(&shm->restConds[i], &cattr);
     }
 }

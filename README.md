@@ -76,3 +76,14 @@ int random_int(int l, int h);
 ```cpp
 int x = random_int(1, 10);
 ```
+## Rider
+### cal_delivery_time
+原型：
+```cpp
+int Rider::cal_delivery_time(int x, int y, const std::shared_ptr<Order> &porder);
+```
+功能：
+```
+计算从(x, y)开始送订单porder所需要的时间，可能是取餐时间也可能是送餐时间，取决于porder的状态
+已经将骑手到店等待饭做好的时间考虑在内
+```
