@@ -16,8 +16,8 @@ void Rider::manage()
 
     MQ::rider_info_struct rider_info;
     if (MQ::read(MQ::create(RIDER_INFO_FRONT_SVKEY), rider_info, self_id, false) >= 0) {
-        self_x = rider_info.rider_x;
-        self_y = rider_info.rider_y;
+        self_x = rider_info.rider_y;
+        self_y = rider_info.rider_x;
         if (rider_info.event_type == 0) {
             //骑手到指定位置
             if (orders[0]->is_take) {
@@ -35,15 +35,6 @@ void Rider::manage()
             pthread_cond_signal(&orders[0]->cond);
             pthread_cond_wait(&cond, &lock);
         }
-    } else {
-        // if (is_waiting) {
-        //     if (*system_time >= orders[0]->done_time) {
-        //         is_waiting = false;
-        //         orders[0]->is_take = true;
-        //         pthread_cond_signal(&orders[0]->cond);
-        //         pthread_cond_wait(&cond, &lock);
-        //     }
-        // }
     }
     
     pthread_mutex_unlock(&lock);
@@ -96,7 +87,7 @@ void* Rider::deliver(void* arg)
     int msqid = MQ::create(RIDER_INFO_BACK_SVKEY);
     MQ::rider_info_struct rider_info;
     if (order->is_take) {
-        rider_info = {rider->self_id, 2, order->user_x, order->user_y};
+        rider_info = {rider->self_id, 2, order->user_y, order->user_x};
         MQ::write(msqid, rider_info);
     } else {
         // if (*system_time >= order->done_time) {
@@ -106,7 +97,7 @@ void* Rider::deliver(void* arg)
         // } else {
         //     rider->is_waiting = true;
         // }
-        rider_info = {rider->self_id, 3, order->rest_x, order->rest_y};
+        rider_info = {rider->self_id, 3, order->rest_y, order->rest_x};
         MQ::write(msqid, rider_info);
     } 
     

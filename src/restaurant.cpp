@@ -13,8 +13,8 @@ void Restaurant::manage()
     int msgqid = MQ::create(USER_TO_REST);
     MQ::info_desc_struct order_msg;
     while (MQ::read(msgqid, order_msg, self_id, false) >= 0) {
-        int required_time = random_int(*system_time, (*system_time) + 500);
-        int done_time = random_int(*system_time, (*system_time) + 100);
+        int required_time = random_int(*system_time, (*system_time) + 50);
+        int done_time = random_int(*system_time, (*system_time) + 5);
         Order new_order(order_msg.user_x, order_msg.user_y, required_time, done_time);
         print("这里是饭店 " << self_id << " 接收到了用户 " 
                 << order_msg.user_id << " 的订单，位于 " 
