@@ -11,51 +11,126 @@ bool Rider::is_accept_order()
 
 void Rider::manage() 
 {
-    pthread_mutex_lock(&lock);
+    // pthread_mutex_lock(&lock);
     print("rider" << self_id << std::endl);
+//     MQ::rider_info_struct rider_info;
+//     if (MQ::read(MQ::create(RIDER_INFO_FRONT_SVKEY), rider_info, self_id, false) >= 0) {
+//         self_x = rider_info.rider_y;
+//         self_y = rider_info.rider_x;
+//         if (rider_info.event_type == 0) {
+//             //骑手到指定位置
+//             if (orders[0]->is_take) {
+//                 // erase_order(orders[0]->thread);
+//                 orders.pop_front();
+//             } else {
+//                 pthread_cond_signal(&orders[0]->cond);
+//                 pthread_cond_wait(&cond, &lock);
+//                 goto END;
+//             }
+//         } else if (rider_info.event_type == 1) {
+//             //有新订单
+//             print("有新订单产生" << std::endl);
+//             get_order();
+//         }
+//         int next_order_id = cal_next_order();
+//         if (next_order_id != -1) {
+//             for (const auto &porder : orders) {
+//                 if (porder->order_id == next_order_id) {
+//                     pthread_cond_signal(&porder->cond);
+//                     print("骑手开始送 " << porder->order_id << std::endl);
+//                     pthread_cond_wait(&cond, &lock);
+//                     break;
+//                 }
+//             }
+//         }
+//     } else {
+//         if (is_waiting) {
+//             if (*system_time >= orders[0]->done_time) {
+//                 print("订单等待结束," << orders[0]->order_id);
+//                 is_waiting = false;
+//                 orders[0]->is_take = true;
+//                 pthread_cond_signal(&orders[0]->cond);
+//                 pthread_cond_wait(&cond, &lock);
+//             }
+//         }
+//     }
+// END:   
     MQ::rider_info_struct rider_info;
     if (MQ::read(MQ::create(RIDER_INFO_FRONT_SVKEY), rider_info, self_id, false) >= 0) {
         self_x = rider_info.rider_y;
         self_y = rider_info.rider_x;
         if (rider_info.event_type == 0) {
-            //骑手到指定位置
             if (orders[0]->is_take) {
-                // erase_order(orders[0]->thread);
                 orders.pop_front();
+                int nid = cal_next_order();
+                if (nid != -1) {
+                    for (const auto &p : orders) {
+                        if (p->order_id == nid) {
+                            int msqid = MQ::create(RIDER_INFO_BACK_SVKEY);
+                            MQ::rider_info_struct rider_info;
+                            int nx, ny;
+                            if (p->is_take) {
+                                nx = p->user_y;
+                                ny = p->user_x;
+                            } else {
+                                nx = p->rest_y;
+                                ny = p->rest_x;
+                            }
+                            rider_info = {self_id, 2, nx, ny};
+                            MQ::write(msqid, rider_info);
+                            break;
+                        }
+                    }
+                }
             } else {
-                pthread_cond_signal(&orders[0]->cond);
-                pthread_cond_wait(&cond, &lock);
-                goto END;
+                orders[0]->is_take = true;
+                int nid = cal_next_order();
+                if (nid != -1) {
+                    for (const auto &p : orders) {
+                        if (p->order_id == nid) {
+                            int msqid = MQ::create(RIDER_INFO_BACK_SVKEY);
+                            MQ::rider_info_struct rider_info;
+                            int nx, ny;
+                            if (p->is_take) {
+                                nx = p->user_y;
+                                ny = p->user_x;
+                            } else {
+                                nx = p->rest_y;
+                                ny = p->rest_x;
+                            }
+                            rider_info = {self_id, 3, nx, ny};
+                            MQ::write(msqid, rider_info);
+                            break;
+                        }
+                    }
+                }
             }
         } else if (rider_info.event_type == 1) {
-            //有新订单
-            print("有新订单产生" << std::endl);
             get_order();
-        }
-        int next_order_id = cal_next_order();
-        if (next_order_id != -1) {
-            for (const auto &porder : orders) {
-                if (porder->order_id == next_order_id) {
-                    pthread_cond_signal(&porder->cond);
-                    print("骑手开始送 " << porder->order_id << std::endl);
-                    pthread_cond_wait(&cond, &lock);
-                    break;
+            int nid = cal_next_order();
+            if (nid != -1) {
+                for (const auto &p : orders) {
+                    if (p->order_id == nid) {
+                        int msqid = MQ::create(RIDER_INFO_BACK_SVKEY);
+                        MQ::rider_info_struct rider_info;
+                        int nx, ny;
+                        if (p->is_take) {
+                            nx = p->user_y;
+                            ny = p->user_x;
+                        } else {
+                            nx = p->rest_y;
+                            ny = p->rest_x;
+                        }
+                        int temp = (p->is_take) ? 2 : 3;
+                        rider_info = {self_id, temp, nx, ny};
+                        MQ::write(msqid, rider_info);
+                        break;
+                    }
                 }
             }
         }
-    } else {
-        if (is_waiting) {
-            if (*system_time >= orders[0]->done_time) {
-                print("订单等待结束," << orders[0]->order_id);
-                is_waiting = false;
-                orders[0]->is_take = true;
-                pthread_cond_signal(&orders[0]->cond);
-                pthread_cond_wait(&cond, &lock);
-            }
-        }
     }
-END:   
-    pthread_mutex_unlock(&lock);
+    // pthread_mutex_unlock(&lock);
 }
 
 void Rider::get_order() {
