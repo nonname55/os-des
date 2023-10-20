@@ -34,8 +34,14 @@ void Rider::manage()
         }
         int next_order_id = cal_next_order();
         if (next_order_id != -1) {
-            pthread_cond_signal(&orders[0]->cond);
-            pthread_cond_wait(&cond, &lock);
+            for (const auto &porder : orders) {
+                if (porder->order_id == next_order_id) {
+                    pthread_cond_signal(&porder->cond);
+                    print("骑手开始送 " << porder->order_id << std::endl);
+                    pthread_cond_wait(&cond, &lock);
+                    break;
+                }
+            }
         }
     } else {
         if (is_waiting) {
@@ -68,7 +74,7 @@ void Rider::get_order() {
         new_order->done_time = order_info.done_time;
         if (is_accept_order(new_order)) {
             create_order(new_order);
-            print("骑手" << self_id << "接单" << std::endl);
+            print("骑手" << self_id << "接单" << new_order->order_id << std::endl);
         } else {
             abandon.emplace_back(order_info);
         }
@@ -194,9 +200,6 @@ int Rider::cal_next_order()
             break;
         }
     }
-    std::shared_ptr<Order> temp = std::make_shared<Order>(*orders[ind]);
-    orders.erase(orders.begin() + ind);
-    orders.push_front(temp);
     return transfer_order_id;
 }
 
