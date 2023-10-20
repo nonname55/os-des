@@ -46,53 +46,22 @@ int x = 0, y = 1;
 print("hello world" << x << ' ' << y << std::endl);
 ```
 ## Graph
-注意，使用Graph结构体中的任何函数都要用`graph.xxx`调用
-### getValidPos
-功能：
-```
-在地图上获取一个合法的随机位置
-```
-代码：
-```cpp
-std::pair<int, int> getValidPos() {
-    int x, y;
-    do {
-        x = random_int(0, G_ROW - 1);
-        y = random_int(0, G_COL - 1);
-    } while (bupt_map[x][y] == POS_ERROR);
-    return {x, y};
-}
-```
-使用示例：
-```cpp
-struct Point {
-    int x, y;
-} point;
+注意，Graph目前写成了命名空间形式，使用`Graph::xxx`可以调用其中的函数，函数声明可以查看`graph.h`
 
-auto pos = graph.getValidPos();
-point.x = pos.first;
-point.y = pos.second;
-```
 ### astar
 原型：
 ```cpp
-int astar(int sx, int sy, int ex, int ey, bool isPath)
+int astar(int sx, int sy, int ex, int ey, const std::vector<std::vector<int>> &graph);
 ```
 功能：
 ```
-获得最短路，获得最短路径，返回值为最短路的值
-如果最后一个参数isPath为true，就是需要保存最短路径（会保存在graph.shortest_path中），反之不需要
-为了项目性能考虑，如果只需要知道最短路有多长，isPath就设为false
+获取最短路长度，这里后端传进去的参数graph是Graph::graph
 ```
 使用示例：
 ```cpp
 //不需要路径
-int dis = graph.astar(0, 0, 8, 9, false);
+int dis = graph.astar(0, 0, 8, 9, Graph::graph);
 //需要路径
-int dis = graph.astar(0, 0, 8, 9, true);
-for (const auto& node : graph.shortest_path) {
-    ... 
-}
 ```
 ## random_int
 原型：
