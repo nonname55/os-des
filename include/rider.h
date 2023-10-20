@@ -56,7 +56,7 @@ struct Rider {
 
     void erase_order(pthread_t tid);
 
-    int cal_next_order();
+    void cal_next_order();
 
     int cal_delivery_time(int x, int y, const std::shared_ptr<Order> &porder);
 

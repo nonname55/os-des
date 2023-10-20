@@ -12,49 +12,8 @@ bool Rider::is_accept_order()
 void Rider::manage() 
 {
     // pthread_mutex_lock(&lock);
-    print("rider" << self_id << std::endl);
-//     MQ::rider_info_struct rider_info;
-//     if (MQ::read(MQ::create(RIDER_INFO_FRONT_SVKEY), rider_info, self_id, false) >= 0) {
-//         self_x = rider_info.rider_y;
-//         self_y = rider_info.rider_x;
-//         if (rider_info.event_type == 0) {
-//             //骑手到指定位置
-//             if (orders[0]->is_take) {
-//                 // erase_order(orders[0]->thread);
-//                 orders.pop_front();
-//             } else {
-//                 pthread_cond_signal(&orders[0]->cond);
-//                 pthread_cond_wait(&cond, &lock);
-//                 goto END;
-//             }
-//         } else if (rider_info.event_type == 1) {
-//             //有新订单
-//             print("有新订单产生" << std::endl);
-//             get_order();
-//         }
-//         int next_order_id = cal_next_order();
-//         if (next_order_id != -1) {
-//             for (const auto &porder : orders) {
-//                 if (porder->order_id == next_order_id) {
-//                     pthread_cond_signal(&porder->cond);
-//                     print("骑手开始送 " << porder->order_id << std::endl);
-//                     pthread_cond_wait(&cond, &lock);
-//                     break;
-//                 }
-//             }
-//         }
-//     } else {
-//         if (is_waiting) {
-//             if (*system_time >= orders[0]->done_time) {
-//                 print("订单等待结束," << orders[0]->order_id);
-//                 is_waiting = false;
-//                 orders[0]->is_take = true;
-//                 pthread_cond_signal(&orders[0]->cond);
-//                 pthread_cond_wait(&cond, &lock);
-//             }
-//         }
-//     }
-// END:   
+    //sd
+    print("rider" << self_id << std::endl); 
     MQ::rider_info_struct rider_info;
     if (MQ::read(MQ::create(RIDER_INFO_FRONT_SVKEY), rider_info, self_id, false) >= 0) {
         self_x = rider_info.rider_y;
@@ -62,72 +21,13 @@ void Rider::manage()
         if (rider_info.event_type == 0) {
             if (orders[0]->is_take) {
                 orders.pop_front();
-                int nid = cal_next_order();
-                if (nid != -1) {
-                    for (const auto &p : orders) {
-                        if (p->order_id == nid) {
-                            int msqid = MQ::create(RIDER_INFO_BACK_SVKEY);
-                            MQ::rider_info_struct rider_info;
-                            int nx, ny;
-                            if (p->is_take) {
-                                nx = p->user_y;
-                                ny = p->user_x;
-                            } else {
-                                nx = p->rest_y;
-                                ny = p->rest_x;
-                            }
-                            rider_info = {self_id, 2, nx, ny};
-                            MQ::write(msqid, rider_info);
-                            break;
-                        }
-                    }
-                }
             } else {
                 orders[0]->is_take = true;
-                int nid = cal_next_order();
-                if (nid != -1) {
-                    for (const auto &p : orders) {
-                        if (p->order_id == nid) {
-                            int msqid = MQ::create(RIDER_INFO_BACK_SVKEY);
-                            MQ::rider_info_struct rider_info;
-                            int nx, ny;
-                            if (p->is_take) {
-                                nx = p->user_y;
-                                ny = p->user_x;
-                            } else {
-                                nx = p->rest_y;
-                                ny = p->rest_x;
-                            }
-                            rider_info = {self_id, 3, nx, ny};
-                            MQ::write(msqid, rider_info);
-                            break;
-                        }
-                    }
-                }
             }
+            cal_next_order();
         } else if (rider_info.event_type == 1) {
             get_order();
-            int nid = cal_next_order();
-            if (nid != -1) {
-                for (const auto &p : orders) {
-                    if (p->order_id == nid) {
-                        int msqid = MQ::create(RIDER_INFO_BACK_SVKEY);
-                        MQ::rider_info_struct rider_info;
-                        int nx, ny;
-                        if (p->is_take) {
-                            nx = p->user_y;
-                            ny = p->user_x;
-                        } else {
-                            nx = p->rest_y;
-                            ny = p->rest_x;
-                        }
-                        int temp = (p->is_take) ? 2 : 3;
-                        rider_info = {self_id, temp, nx, ny};
-                        MQ::write(msqid, rider_info);
-                        break;
-                    }
-                }
-            }
+            cal_next_order();
         }
     }
     // pthread_mutex_unlock(&lock);
@@ -252,21 +152,41 @@ int Rider::cal_delivery_time(int x, int y, const std::shared_ptr<Order> &porder)
         Graph::astar(porder->rest_x, porder->rest_y, porder->user_x, porder->user_y, Graph::graph);
 }
 
-int Rider::cal_next_order()
+void Rider::cal_next_order()
 {
     int orders_size = orders.size();
     if (orders_size == 0)
-        return -1;
-    if (orders_size == 1)
-        return orders[0]->order_id;
+        return;
+    int msqid = MQ::create(RIDER_INFO_BACK_SVKEY);
+    MQ::rider_info_struct rider_info;
+    auto send_msg = [&](std::shared_ptr<Order> porder) {
+        int next_x, next_y, msg_type;
+        if (porder->is_take) {
+            next_x = porder->user_y;
+            next_y = porder->user_x;
+            msg_type = 2;
+        } else {
+            next_x = porder->rest_y;
+            next_y = porder->rest_x;
+            msg_type = 3;
+        }
+        rider_info = {self_id, msg_type, next_x, next_y};
+        MQ::write(msqid, rider_info);
+    };
+    if (orders_size == 1) {
+        send_msg(orders[0]);
+        return;
+    }
+        
     std::sort(orders.begin(), orders.end(), 
         [](std::shared_ptr<Order> porder1, std::shared_ptr<Order> porder2) {
             return porder1->required_time < porder2->required_time;
         });
-    if (cal_delivery_time(self_x, self_y, orders[0]) + (*system_time) >= orders[0]->required_time) 
-        return orders[0]->order_id;
+    if (cal_delivery_time(self_x, self_y, orders[0]) + (*system_time) >= orders[0]->required_time) {
+        send_msg(orders[0]);
+        return;
+    }
     
-    int transfer_order_id = orders[0]->order_id, ind;
     for (int i = 1; i < orders_size; ++i) {
         std::pair<int, int> transfer_pos;
         if (orders[i]->is_take)
@@ -279,12 +199,10 @@ int Rider::cal_next_order()
         int sum_time = to_transfer_time + 
             cal_delivery_time(transfer_pos.first, transfer_pos.second, orders[0]);
         if (sum_time <= orders[0]->required_time) {
-            transfer_order_id = orders[i]->order_id;
-            ind = i;
+            send_msg(orders[i]);
             break;
         }
     }
-    return transfer_order_id;
 }
 
 void Rider::erase_order(pthread_t tid)
