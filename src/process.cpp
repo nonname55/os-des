@@ -177,6 +177,7 @@ void create_rider_process(int l, int r)
             std::cerr << "fork error" << std::endl;
             exit(-1);
         } else if (pid == 0) {
+            print("create rider" << i << ' ' << RIDER_NUM << std::endl);
             riderPro[i] = {i, random_int(1, 10), getpid()};
             pushRiderQue(i);
             rider_process(i);
