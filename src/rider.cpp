@@ -13,49 +13,41 @@ bool Rider::is_accept_order(std::shared_ptr<Order>& order)
 void Rider::manage() 
 {
     pthread_mutex_lock(&lock);
-
+    print("rider" << std::endl);
     MQ::rider_info_struct rider_info;
     if (MQ::read(MQ::create(RIDER_INFO_FRONT_SVKEY), rider_info, self_id, false) >= 0) {
         self_x = rider_info.rider_y;
         self_y = rider_info.rider_x;
-        // if (rider_info.event_type == 0) {
-        //     //骑手到指定位置
-        //     if (orders[0]->is_take) {
-        //         erase_order(orders[0]->thread);
-        //         orders.pop_front();
-        //     } else {
-        //         orders[0]->is_take = true;
-        //     }
-        // } else if (rider_info.event_type == 1) {
-        //     //有新订单
-        //     get_order();
-        // }
-        // int next_order_id = cal_next_order();
-        // if (next_order_id != -1) {
-        //     pthread_cond_signal(&orders[0]->cond);
-        //     pthread_cond_wait(&cond, &lock);
-        // }
-        
+        if (rider_info.event_type == 0) {
+            //骑手到指定位置
+            if (orders[0]->is_take) {
+                erase_order(orders[0]->thread);
+                orders.pop_front();
+            } else {
+                pthread_cond_signal(&orders[0]->cond);
+                pthread_cond_wait(&cond, &lock);
+                goto END;
+            }
+        } else if (rider_info.event_type == 1) {
+            //有新订单
+            get_order();
+        }
+        int next_order_id = cal_next_order();
+        if (next_order_id != -1) {
+            pthread_cond_signal(&orders[0]->cond);
+            pthread_cond_wait(&cond, &lock);
+        }
     } else {
-        print("暂时没有返回位置" << std::endl);
+        if (is_waiting) {
+            if (*system_time >= orders[0]->done_time) {
+                is_waiting = false;
+                orders[0]->is_take = true;
+                pthread_cond_signal(&orders[0]->cond);
+                pthread_cond_wait(&cond, &lock);
+            }
+        }
     }
-    get_order();
-    if (orders.size() > 0) {
-        int msqid = MQ::create(RIDER_INFO_BACK_SVKEY);
-        MQ::rider_info_struct rider_info;
-        if (orders[0]->is_take) {
-            rider_info = {self_id, 2, orders[0]->user_y, orders[0]->user_x};
-            MQ::write(msqid, rider_info);
-        } else {
-            rider_info = {self_id, 3, orders[0]->rest_y, orders[0]->rest_x};
-            MQ::write(msqid, rider_info);
-        } 
-        erase_order(orders[0]->thread);
-        orders.pop_front();
-    } else {
-        print("没有订单" << std::endl);
-    }
-    
+END:   
     pthread_mutex_unlock(&lock);
 }
 
@@ -104,22 +96,38 @@ void* Rider::deliver(void* arg)
     pthread_cond_signal(&(rider->cond));
     pthread_cond_wait(&(order->cond), &(rider->lock));
 
-    int msqid = MQ::create(RIDER_INFO_FRONT_SVKEY);
+    int msqid = MQ::create(RIDER_INFO_BACK_SVKEY);
     MQ::rider_info_struct rider_info;
-    if (order->is_take) {
-        rider_info = {rider->self_id, 2, order->user_y, order->user_x};
-        MQ::write(msqid, rider_info);
-    } else {
-        // if (*system_time >= order->done_time) {
-        //     rider_info = {rider->self_id, 3, order->rest_x, order->rest_y};
-        //     MQ::write(msqid, rider_info);
-        //     order->is_take = true;
-        // } else {
-        //     rider->is_waiting = true;
-        // }
-        rider_info = {rider->self_id, 3, order->rest_y, order->rest_x};
-        MQ::write(msqid, rider_info);
-    } 
+    // if (order->is_take) {
+    //     rider_info = {rider->self_id, 2, order->user_y, order->user_x};
+    //     MQ::write(msqid, rider_info);
+    // } else {
+    //     if (*system_time >= order->done_time) {
+    //         rider_info = {rider->self_id, 3, order->rest_x, order->rest_y};
+    //         MQ::write(msqid, rider_info);
+    //         order->is_take = true;
+    //     }
+    // } 
+
+    if (!rider->is_waiting) {
+        if (order->is_take) {
+            rider_info = {rider->self_id, 2, order->user_y, order->user_x};
+            MQ::write(msqid, rider_info);
+        } else {
+            if (rider->self_x == order->rest_x && rider->self_y == order->rest_y) {
+                if (*system_time >= order->done_time) {
+                    order->is_take = true;
+                    rider_info = {rider->self_id, 2, order->user_y, order->user_x};
+                    MQ::write(msqid, rider_info);
+                } else {
+                    rider->is_waiting = true;
+                }
+            } else {
+                rider_info = {rider->self_id, 3, order->rest_y, order->rest_x};
+                MQ::write(msqid, rider_info);
+            }
+        }
+    }
     
     pthread_cond_signal(&(rider->cond));
     pthread_mutex_unlock(&(rider->lock));
