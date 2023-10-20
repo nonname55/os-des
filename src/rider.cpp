@@ -20,7 +20,7 @@ void Rider::manage()
         if (rider_info.event_type == 0) {
             //骑手到指定位置
             if (orders[0]->is_take) {
-                erase_order(orders[0]->thread);
+                // erase_order(orders[0]->thread);
                 orders.pop_front();
             } else {
                 pthread_cond_signal(&orders[0]->cond);
