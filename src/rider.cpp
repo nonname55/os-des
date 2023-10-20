@@ -20,10 +20,12 @@ void Rider::manage()
         self_y = rider_info.rider_y;
         if (rider_info.event_type == 0) {
             //骑手到指定位置
-            if (orders[0]->is_take) 
+            if (orders[0]->is_take) {
+                erase_order(orders[0]->thread);
                 orders.pop_front();
-            else 
+            } else {
                 orders[0]->is_take = true;
+            }
         } else if (rider_info.event_type == 1) {
             //有新订单
             get_order();
@@ -34,14 +36,14 @@ void Rider::manage()
             pthread_cond_wait(&cond, &lock);
         }
     } else {
-        if (is_waiting) {
-            if (*system_time >= orders[0]->done_time) {
-                is_waiting = false;
-                orders[0]->is_take = true;
-                pthread_cond_signal(&orders[0]->cond);
-                pthread_cond_wait(&cond, &lock);
-            }
-        }
+        // if (is_waiting) {
+        //     if (*system_time >= orders[0]->done_time) {
+        //         is_waiting = false;
+        //         orders[0]->is_take = true;
+        //         pthread_cond_signal(&orders[0]->cond);
+        //         pthread_cond_wait(&cond, &lock);
+        //     }
+        // }
     }
     
     pthread_mutex_unlock(&lock);
@@ -97,12 +99,15 @@ void* Rider::deliver(void* arg)
         rider_info = {rider->self_id, 2, order->user_x, order->user_y};
         MQ::write(msqid, rider_info);
     } else {
-        if (*system_time >= order->done_time) {
-            rider_info = {rider->self_id, 3, order->rest_x, order->rest_y};
-            MQ::write(msqid, rider_info);
-        } else {
-            rider->is_waiting = true;
-        }
+        // if (*system_time >= order->done_time) {
+        //     rider_info = {rider->self_id, 3, order->rest_x, order->rest_y};
+        //     MQ::write(msqid, rider_info);
+        //     order->is_take = true;
+        // } else {
+        //     rider->is_waiting = true;
+        // }
+        rider_info = {rider->self_id, 3, order->rest_x, order->rest_y};
+        MQ::write(msqid, rider_info);
     } 
     
     pthread_cond_signal(&(rider->cond));
@@ -174,4 +179,9 @@ int Rider::cal_next_order()
     orders.erase(orders.begin() + ind);
     orders.push_front(temp);
     return transfer_order_id;
+}
+
+void erase_order(pthread_t tid)
+{
+    pthread_join(tid, NULL);
 }
