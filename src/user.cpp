@@ -20,7 +20,8 @@ void User::manage()
         MQ::write(MQ::create(USER_TO_REST), order_msg);
         print("用户 " << self_id << " 点了饭店 " << rest_id << " 的外卖，我在" << self_x << ' ' << self_y << std::endl);
         //发送到前端
-        order_msg.type = 1;
+        order_msg = {1, *order_count, self_y, self_x, self_id, self_get_y, self_get_x,
+            -1, -1, rest_id, -1, -1, -1, -1, -1};
         MQ::write(MQ::create(INFO_DESC_SVKEY), order_msg);
     }
 }

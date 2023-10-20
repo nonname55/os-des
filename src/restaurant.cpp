@@ -27,6 +27,10 @@ void Restaurant::manage()
         order_msg.done_time = done_time;
         MQ::write(MQ::create(REST_TO_RIDER), order_msg);
         order_msg.type = 2;
+        order_msg.rest_x = self_y;
+        order_msg.rest_y = self_x;
+        order_msg.rest_get_x = self_get_y;
+        order_msg.rest_get_y = self_get_x;
         MQ::write(MQ::create(INFO_DESC_SVKEY), order_msg);
     }
 }

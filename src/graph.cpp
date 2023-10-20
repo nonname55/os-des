@@ -98,7 +98,5 @@ std::pair<std::pair<int, int>, std::pair<int, int>> Graph::get_valid_pos(int who
         if (check_pos_valid(receive_x, receive_y, G_RECEIV))
             break;
     }
-    std::swap(x, y);
-    std::swap(receive_x, receive_y);
     return {{x, y}, {receive_x, receive_y}};
 }
