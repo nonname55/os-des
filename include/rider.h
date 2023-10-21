@@ -35,6 +35,8 @@ struct Rider {
         this->self_id = _id;
         this->speed = _speed;
         this->pid = _pid;
+        cond = PTHREAD_COND_INITIALIZER;
+        lock = PTHREAD_MUTEX_INITIALIZER;
     }
     bool is_accept_order();
 
@@ -56,7 +58,7 @@ struct Rider {
 
     void erase_order(pthread_t tid);
 
-    void cal_next_order();
+    int cal_next_order();
 
     int cal_delivery_time(int x, int y, const std::shared_ptr<Order> &porder);
 

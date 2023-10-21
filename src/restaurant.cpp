@@ -5,6 +5,10 @@ Restaurant restaurant;
 
 void Restaurant::manage() 
 {
+    std::stringstream info;
+    info << "restaurant " << self_id;
+    WriteFile(logPath, info.str(), true);
+    
     auto self_pos = Graph::get_valid_pos(G_REST);
     self_x = self_pos.first.first;
     self_y = self_pos.first.second;

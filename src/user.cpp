@@ -6,6 +6,10 @@ User user;
 void User::manage() 
 {
     // print("user" << self_id << std::endl);
+    std::stringstream info;
+    info << "user " << self_id;
+    WriteFile(logPath, info.str(), true);
+    
     MQ::info_desc_struct order_msg;
     if (is_order()) {
         ++(*order_count);
