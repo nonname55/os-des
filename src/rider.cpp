@@ -5,31 +5,49 @@ Rider rider;
 
 bool Rider::is_accept_order() 
 {
-    bool res = random_int(0, 1) == 1 ? true : false;
+    if (self_id == RIDER_NUM)
+        return true;
+    bool res = random_int(0, 1) == 1;
     return res;
 }
 
 void Rider::manage() 
 {
     // pthread_mutex_lock(&lock);
-    //sd
-    print("rider" << self_id << std::endl); 
+    print("rider" << self_id << std::endl);
     MQ::rider_info_struct rider_info;
-    if (MQ::read(MQ::create(RIDER_INFO_FRONT_SVKEY), rider_info, self_id, false) >= 0) {
+    int msqid = MQ::create(RIDER_INFO_FRONT_SVKEY);
+    print("骑手" << self_id << "创建消息队列成功, msqid=" << msqid << std::endl);
+    int ret = MQ::read(msqid, rider_info, self_id, false);
+    print("骑手" << self_id << "成功读取到消息，返回值" << ret << std::endl);
+    if (ret >= 0) {
+        print("进入到ret>=0的判断" << std::endl);
         self_x = rider_info.rider_y;
         self_y = rider_info.rider_x;
+        print("成功给骑手坐标赋值" << self_x << ' ' << self_y << ' ' << rider_info.event_type << std::endl);
         if (rider_info.event_type == 0) {
-            if (orders[0]->is_take) {
-                orders.pop_front();
-            } else {
-                orders[0]->is_take = true;
+            print("骑手" << self_id << "有" << orders.size() << "个订单" << std::endl);
+            if (orders.size() > 0) {
+                if (orders[0]->is_take) {
+                    print("骑手" << self_id << "已送达" << std::endl);
+                    orders.front().reset();
+                    orders.pop_front();
+                    print("骑手" << self_id << "已经删除送达了的订单" << std::endl);
+                } else {
+                    orders[0]->is_take = true;
+                    print("骑手" << self_id << "已经取到餐" << std::endl);
+                }
+                cal_next_order();
             }
-            cal_next_order();
         } else if (rider_info.event_type == 1) {
+            print("骑手" << self_id << "接收到了前端发来的有新订单的信息" << std::endl);
             get_order();
             cal_next_order();
         }
+    } else {
+        print("骑手没有接收到任何消息" << std::endl);
     }
+    
     // pthread_mutex_unlock(&lock);
 }
 
@@ -53,6 +71,7 @@ void Rider::get_order() {
         if (is_accept_order()) {
             print("骑手" << self_id << "接单" << new_order->order_id << std::endl);
             create_order(new_order);
+            // orders.emplace_back(new_order);
         } else {
             print("不接这个订单" << std::endl);
             abandon.emplace_back(order_info);
@@ -79,44 +98,27 @@ void* Rider::deliver(void* arg)
     Rider* rider = args->rider;
     std::shared_ptr<Order> order = args->order;
     pthread_mutex_lock(&(rider->lock));
-    pthread_cond_signal(&(rider->cond));
-    pthread_cond_wait(&(order->cond), &(rider->lock));
-    print("骑手正式开始送订单" << order->order_id << std::endl);
     int msqid = MQ::create(RIDER_INFO_BACK_SVKEY);
     MQ::rider_info_struct rider_info;
-    // if (order->is_take) {
-    //     rider_info = {rider->self_id, 2, order->user_y, order->user_x};
-    //     MQ::write(msqid, rider_info);
-    // } else {
-    //     if (*system_time >= order->done_time) {
-    //         rider_info = {rider->self_id, 3, order->rest_x, order->rest_y};
-    //         MQ::write(msqid, rider_info);
-    //         order->is_take = true;
-    //     }
-    // } 
-
-    if (!rider->is_waiting) {
-        if (order->is_take) {
-            rider_info = {rider->self_id, 2, order->user_y, order->user_x};
-            MQ::write(msqid, rider_info);
-            print("订单" << order->order_id << "取到了，正在送往顾客");
+    auto send_msg = [&](std::shared_ptr<Order> porder) {
+        int next_x, next_y, msg_type;
+        if (porder->is_take) {
+            next_x = porder->user_y;
+            next_y = porder->user_x;
+            msg_type = 2;
         } else {
-            if (rider->self_x == order->rest_x && rider->self_y == order->rest_y) {
-                if (*system_time >= order->done_time) {
-                    print("订单" << order->order_id << "取到了，正在送往顾客");
-                    order->is_take = true;
-                    rider_info = {rider->self_id, 2, order->user_y, order->user_x};
-                    MQ::write(msqid, rider_info);
-                } else {
-                    rider->is_waiting = true;
-                    print("订单开始等待")
-                }
-            } else {
-                rider_info = {rider->self_id, 3, order->rest_y, order->rest_x};
-                MQ::write(msqid, rider_info);
-                print("骑手还没有取到订单" << order->order_id << std::endl);
-            }
+            next_x = porder->rest_y;
+            next_y = porder->rest_x;
+            msg_type = 3;
         }
+        rider_info = {rider->self_id, msg_type, next_x, next_y};
+        MQ::write(msqid, rider_info);
+    };
+    print("骑手" << rider->self_id << "已经决定好下一步取餐 " << order->order_id << std::endl);
+    while (true) {
+        pthread_cond_signal(&(rider->cond));
+        pthread_cond_wait(&(order->cond), &(rider->lock));
+        send_msg(order);
     }
     
     pthread_cond_signal(&(rider->cond));
@@ -137,8 +139,10 @@ void Rider::sort_order()
 void Rider::create_order(std::shared_ptr<Order>& newOrder) 
 {
     ThreadArgs args = {this, newOrder};
+    print("试图创建订单" << std::endl);
     pthread_create(&(newOrder->thread), nullptr, deliver, &args);
     pthread_cond_wait(&cond, &lock);
+    print("创建订单成功" << std::endl);
     orders.push_back(std::move(newOrder));
 }
 
@@ -154,27 +158,15 @@ int Rider::cal_delivery_time(int x, int y, const std::shared_ptr<Order> &porder)
 
 void Rider::cal_next_order()
 {
+    print("开始决定下一个订单" << std::endl);
     int orders_size = orders.size();
     if (orders_size == 0)
         return;
-    int msqid = MQ::create(RIDER_INFO_BACK_SVKEY);
-    MQ::rider_info_struct rider_info;
-    auto send_msg = [&](std::shared_ptr<Order> porder) {
-        int next_x, next_y, msg_type;
-        if (porder->is_take) {
-            next_x = porder->user_y;
-            next_y = porder->user_x;
-            msg_type = 2;
-        } else {
-            next_x = porder->rest_y;
-            next_y = porder->rest_x;
-            msg_type = 3;
-        }
-        rider_info = {self_id, msg_type, next_x, next_y};
-        MQ::write(msqid, rider_info);
-    };
     if (orders_size == 1) {
-        send_msg(orders[0]);
+        pthread_cond_signal(&orders[0]->cond);
+        print("骑手" << self_id << "试图唤醒订单" << std::endl);
+        pthread_cond_wait(&cond, &lock);
+        print("唤醒成功，执行结束" << std::endl);
         return;
     }
         
@@ -183,10 +175,14 @@ void Rider::cal_next_order()
             return porder1->required_time < porder2->required_time;
         });
     if (cal_delivery_time(self_x, self_y, orders[0]) + (*system_time) >= orders[0]->required_time) {
-        send_msg(orders[0]);
+        pthread_cond_signal(&orders[0]->cond);
+        print("骑手" << self_id << "试图唤醒订单" << std::endl);
+        pthread_cond_wait(&cond, &lock);
+        print("唤醒成功，执行结束" << std::endl);
         return;
     }
-    
+    print("试图寻找中转订单" << std::endl);
+    int ind;
     for (int i = 1; i < orders_size; ++i) {
         std::pair<int, int> transfer_pos;
         if (orders[i]->is_take)
@@ -199,7 +195,13 @@ void Rider::cal_next_order()
         int sum_time = to_transfer_time + 
             cal_delivery_time(transfer_pos.first, transfer_pos.second, orders[0]);
         if (sum_time <= orders[0]->required_time) {
-            send_msg(orders[i]);
+            ind = i;
+            pthread_cond_signal(&orders[i]->cond);
+            print("骑手" << self_id << "试图唤醒订单" << std::endl);
+            pthread_cond_wait(&cond, &lock);
+            print("唤醒成功，执行结束" << std::endl);
+            auto it = std::next(orders.begin(), i);
+            std::rotate(orders.begin(), it, orders.end());
             break;
         }
     }

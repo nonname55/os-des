@@ -95,7 +95,9 @@ void rider_process(int id)
         pthread_cond_wait(&(shm->riderConds[id]), &(shm->riderLock));
 
         rider.self_id = id;
+        print("骑手" << rider.self_id << "开始执行" << std::endl);
         rider.manage();
+        print("骑手" << rider.self_id << "结束执行" << std::endl);
     }
 
     pthread_cond_signal(&(shm->riderCond));

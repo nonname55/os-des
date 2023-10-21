@@ -5,7 +5,7 @@ User user;
 
 void User::manage() 
 {
-    print("user" << self_id << std::endl);
+    // print("user" << self_id << std::endl);
     MQ::info_desc_struct order_msg;
     if (is_order()) {
         ++(*order_count);
@@ -15,11 +15,12 @@ void User::manage()
         self_y = self_pos.first.second;
         self_get_x = self_pos.second.first;
         self_get_y = self_pos.second.second;
+        print("用户获取到有效位置" << self_x << ' ' << self_y << ' ' << self_get_x << ' ' << self_get_y << std::endl);
         //给饭店发消息
         order_msg = {rest_id, *order_count, self_x, self_y, self_id, self_get_x, self_get_y,
             -1, -1, rest_id, -1, -1, -1, -1, -1};
         MQ::write(MQ::create(USER_TO_REST), order_msg);
-        // print("用户 " << self_id << " 点了饭店 " << rest_id << " 的外卖，我在" << self_x << ' ' << self_y << std::endl);
+        print("用户 " << self_id << " 点了饭店 " << rest_id << " 的外卖，我在" << self_x << ' ' << self_y << std::endl);
         //发送到前端
         order_msg = {1, *order_count, self_y, self_x, self_id, self_get_y, self_get_x,
             -1, -1, rest_id, -1, -1, -1, -1, -1};
@@ -28,6 +29,13 @@ void User::manage()
 }
 
 bool User::is_order() {
+    int msqid = MQ::create(USER_TO_REST);
+    struct msqid_ds buf;
+    msgctl(msqid, IPC_STAT, &buf);
+
+    if (buf.msg_qnum >= 50) 
+        return false;
+    
     int ri = random_int(1, 3);
     return ri == 1;
 }
