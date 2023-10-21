@@ -8,7 +8,7 @@ extern std::string logPath;
 
 bool IsFile(const std::string& filePath);
 
-bool ReadFile(const std::string &filePath, std::string &fileData, bool lock);
+bool ReadFile(const std::string &filePath, std::vector<std::string> &fileData, bool lock);
 
 bool WriteFile(const std::string &filePath, const std::string &fileData, bool lock);
 

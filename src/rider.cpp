@@ -15,12 +15,12 @@ void Rider::manage()
 {
     pthread_mutex_lock(&lock);
     std::stringstream info;
-    info << "rider " << self_id << ' ' << orders.size() << ' ';
-    for (const auto &porder : orders) {
-        info << porder->user_id << ' ' << porder->rider_id << ' ' << porder->rest_id << ' ' << porder->order_id << ' '
-            << porder->user_x << ' ' << porder->user_y << ' ' << porder->rest_x << ' ' << porder->rest_y << ' '
-            << porder->required_time << ' ' << porder->done_time << ' ' << porder->is_take;
-    }
+    info << "rider " << self_id << ' ' << orders.size();
+    // for (const auto &porder : orders) {
+    //     info << porder->user_id << ' ' << ' ' << porder->rest_id << ' ' << porder->order_id << ' '
+    //         << porder->user_x << ' ' << porder->user_y << ' ' << porder->rest_x << ' ' << porder->rest_y << ' '
+    //         << porder->required_time << ' ' << porder->done_time << ' ' << porder->is_take;
+    // }
     WriteFile(logPath, info.str(), true);
 
     MQ::rider_info_struct rider_info;

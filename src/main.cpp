@@ -26,9 +26,9 @@ int main()
         mkdir(outputDir.c_str(), 0777);
     }
     chdir(outputDir.c_str());
-    // int fd = open("/dev/null", O_RDWR);
+    int fd = open("/dev/null", O_RDWR);
     outputDir += "/output.txt";
-    int fd = open(outputDir.c_str(), O_RDWR | O_TRUNC);
+    // int fd = open(outputDir.c_str(), O_RDWR | O_TRUNC);
     dup2(fd, STDIN_FILENO);
     dup2(fd, STDOUT_FILENO);
     dup2(fd, STDERR_FILENO);
@@ -63,6 +63,19 @@ int main()
     MQ::delete_mq(RIDER_INFO_BACK_SVKEY);
     MQ::delete_mq(RIDER_INFO_FRONT_SVKEY);
 
+    Graph::read_map(Graph::graph);
+    Graph::parse_map(Graph::graph);
+
+    // std::cout << Graph::astar(0, 0, 15, 0, Graph::graph) << std::endl;
+
+    // for (const auto &t : Graph::restaurant_set) {
+    //     std::cout << t.first.first << ' ' << t.first.second << ' ' << t.second.first << ' ' << t.second.second << '\n';
+    // }
+    // std::cout << '\n';
+    // for (const auto &t : Graph::user_set) {
+    //     std::cout << t.first.first << ' ' << t.first.second << ' ' << t.second.first << ' ' << t.second.second << '\n';
+    // }
+
     pid_t scheRider = fork();
     if (scheRider == 0) {
         pthread_mutex_lock(&shm->riderLock);
@@ -71,7 +84,7 @@ int main()
         create_rider_process(1, RIDER_NUM);
         while (true) {
             scheduleRider();
-            sleep(2);
+            sleep(1);
         }
 
         pthread_mutex_unlock(&shm->riderLock);
@@ -87,7 +100,7 @@ int main()
         create_user_process(1, USER_NUM);
         while (true) {
             scheduleUser();
-            sleep(5);
+            sleep(4);
         }
 
         pthread_mutex_unlock(&shm->userLock);

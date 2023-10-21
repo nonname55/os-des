@@ -56,10 +56,10 @@ namespace MQ {
     int read(int msgqid, T &msg, int msgtype, bool is_wait) 
     {
         int msgsiz = sizeof(msg) - sizeof(long);
-        int msg_flag = is_wait ? 0 : IPC_NOWAIT;
+        // int msg_flag = is_wait ? 0 : IPC_NOWAIT;
         int ret = msgrcv(msgqid, &msg, msgsiz, msgtype, IPC_NOWAIT);
         if (ret == -1) {
-            print("接收消息失败, msgqid=" << msgqid << std::endl);
+            // print("接收消息失败, msgqid=" << msgqid << std::endl);
         }
         return ret;
     }
