@@ -1,7 +1,7 @@
-#include "header.h"
-#include "graph.h"
-#include "macro.h"
-#include "file.h"
+#include "../include/header.h"
+#include "../include/graph.h"
+#include "../include/macro.h"
+#include "../include/file.h"
 
 std::vector<std::vector<int>> Graph::graph;
 std::vector<std::pair<std::pair<int, int>, std::pair<int, int>>> Graph::restaurant_set;

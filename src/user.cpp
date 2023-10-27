@@ -1,5 +1,5 @@
-#include "user.h"
-#include "process.h"
+#include "../include/user.h"
+#include "../include/process.h"
 
 User user;
 

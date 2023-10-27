@@ -4,6 +4,11 @@
 #include "header.h"
 #include "macro.h"
 
+#define RIDER_PRO 0
+#define REST_PRO 1
+#define USER_PRO 2
+#define FRONT_PRO 3
+
 struct Process {
     int id;
     int priority;

@@ -1,15 +1,15 @@
-#include "header.h"
-#include "macro.h"
-#include "msgque.h"
-#include "graph.h"
-#include "process.h"
-#include "order.h"
-#include "rider.h"
-#include "restaurant.h"
-#include "user.h"
-#include "file.h"
+#include "../include/file.h"
+#include "../include/graph.h"
+#include "../include/header.h"
+#include "../include/macro.h"
+#include "../include/msgque.h"
+#include "../include/order.h"
+#include "../include/process.h"
+#include "../include/restaurant.h"
+#include "../include/rider.h"
+#include "../include/user.h"
 
-int main() 
+int main()
 {
     getPath(workdir);
     logPath = workdir + "output/log.txt";
@@ -79,7 +79,7 @@ int main()
     pid_t scheRider = fork();
     if (scheRider == 0) {
         pthread_mutex_lock(&shm->riderLock);
-        
+
         setsid();
         create_rider_process(1, RIDER_NUM);
         while (true) {
@@ -95,7 +95,7 @@ int main()
     pid_t scheUser = fork();
     if (scheUser == 0) {
         pthread_mutex_lock(&shm->userLock);
-        
+
         setsid();
         create_user_process(1, USER_NUM);
         while (true) {
@@ -111,7 +111,7 @@ int main()
     pid_t scheRest = fork();
     if (scheRest == 0) {
         pthread_mutex_lock(&shm->restLock);
-        
+
         setsid();
         create_restaurant_process(1, RESTAURANT_NUM);
         while (true) {
@@ -142,6 +142,3 @@ int main()
 
     return 0;
 }
-
-
-

@@ -1,6 +1,6 @@
-#include "header.h"
-#include "macro.h"
-#include "msgque.h"
+#include "../include/header.h"
+#include "../include/macro.h"
+#include "../include/msgque.h"
 
 int MQ::create(int svkey) 
 {

@@ -1,4 +1,4 @@
-#include "file.h"
+#include "../include/file.h"
 
 std::string workdir;
 std::string logPath;

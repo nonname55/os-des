@@ -1,9 +1,9 @@
-#include "rider.h"
-#include "graph.h"
+#include "../include/rider.h"
+#include "../include/graph.h"
 
 Rider rider;
 
-bool Rider::is_accept_order() 
+bool Rider::is_accept_order()
 {
     if (self_id == RIDER_NUM)
         return true;
@@ -11,7 +11,7 @@ bool Rider::is_accept_order()
     return res;
 }
 
-void Rider::manage() 
+void Rider::manage()
 {
     pthread_mutex_lock(&lock);
     std::stringstream info;
@@ -61,11 +61,12 @@ void Rider::manage()
     } else {
         print("骑手没有接收到任何消息" << std::endl);
     }
-    
+
     pthread_mutex_unlock(&lock);
 }
 
-void Rider::get_order() {
+void Rider::get_order()
+{
     MQ::info_desc_struct order_info;
     int msgqid = MQ::create(REST_TO_RIDER);
     std::vector<MQ::info_desc_struct> abandon;
@@ -84,7 +85,7 @@ void Rider::get_order() {
         print("读取到订单" << new_order->order_id << std::endl);
         if (is_accept_order()) {
             print("骑手" << self_id << "接单" << new_order->order_id << std::endl);
-            new_order->cond =  PTHREAD_COND_INITIALIZER;
+            new_order->cond = PTHREAD_COND_INITIALIZER;
             create_order(new_order);
             // orders.emplace_back(new_order);
         } else {
@@ -93,13 +94,13 @@ void Rider::get_order() {
         }
     }
     print("骑手" << self_id << "读取完毕" << std::endl);
-    for (const auto &ao : abandon) {
+    for (const auto& ao : abandon) {
         MQ::write(MQ::create(REST_TO_RIDER), ao);
     }
     abandon.clear();
 }
 
-double Rider::H(const Order& order) 
+double Rider::H(const Order& order)
 {
     int dis = Graph::astar(self_x, self_y, order.user_x, order.user_y, Graph::graph);
     double disH = 1.0 / dis;
@@ -107,7 +108,7 @@ double Rider::H(const Order& order)
     return 0.3 * disH + 0.7 * timeH;
 }
 
-void* Rider::deliver(void* arg) 
+void* Rider::deliver(void* arg)
 {
     ThreadArgs* args = static_cast<ThreadArgs*>(arg);
     Rider* rider = args->rider;
@@ -126,7 +127,7 @@ void* Rider::deliver(void* arg)
             next_y = porder->rest_x;
             msg_type = 3;
         }
-        rider_info = {rider->self_id, msg_type, next_x, next_y};
+        rider_info = { rider->self_id, msg_type, next_x, next_y };
         MQ::write(msqid, rider_info);
     };
     print("骑手" << rider->self_id << "已经决定好下一步取餐 " << order->order_id << std::endl);
@@ -135,13 +136,13 @@ void* Rider::deliver(void* arg)
         pthread_cond_wait(&(order->cond), &(rider->lock));
         send_msg(order);
     }
-    
+
     pthread_cond_signal(&(rider->cond));
     pthread_mutex_unlock(&(rider->lock));
     return nullptr;
 }
 
-void Rider::sort_order() 
+void Rider::sort_order()
 {
     for (const auto& order : orders) {
         order->weight = H(*order);
@@ -151,9 +152,9 @@ void Rider::sort_order()
     });
 }
 
-void Rider::create_order(std::shared_ptr<Order>& newOrder) 
+void Rider::create_order(std::shared_ptr<Order>& newOrder)
 {
-    ThreadArgs args = {this, newOrder};
+    ThreadArgs args = { this, newOrder };
     print("试图创建订单" << std::endl);
     pthread_create(&(newOrder->thread), nullptr, deliver, &args);
     pthread_cond_wait(&cond, &lock);
@@ -161,14 +162,13 @@ void Rider::create_order(std::shared_ptr<Order>& newOrder)
     orders.push_back(std::move(newOrder));
 }
 
-int Rider::cal_delivery_time(int x, int y, const std::shared_ptr<Order> &porder)
+int Rider::cal_delivery_time(int x, int y, const std::shared_ptr<Order>& porder)
 {
     if (porder->is_take)
         return Graph::astar(x, y, porder->user_x, porder->user_y, Graph::graph);
     int time_to_rest = Graph::astar(x, y, porder->rest_x, porder->rest_y, Graph::graph);
     time_to_rest += std::max(porder->done_time - (*system_time) - time_to_rest, 0);
-    return time_to_rest + 
-        Graph::astar(porder->rest_x, porder->rest_y, porder->user_x, porder->user_y, Graph::graph);
+    return time_to_rest + Graph::astar(porder->rest_x, porder->rest_y, porder->user_x, porder->user_y, Graph::graph);
 }
 
 int Rider::cal_next_order()
@@ -180,8 +180,8 @@ int Rider::cal_next_order()
     if (orders_size == 1) {
         return 0;
     }
-        
-    std::sort(orders.begin(), orders.end(), 
+
+    std::sort(orders.begin(), orders.end(),
         [](std::shared_ptr<Order> porder1, std::shared_ptr<Order> porder2) {
             return porder1->required_time < porder2->required_time;
         });
@@ -192,14 +192,13 @@ int Rider::cal_next_order()
     for (int i = 1; i < orders_size; ++i) {
         std::pair<int, int> transfer_pos;
         if (orders[i]->is_take)
-            transfer_pos = {orders[i]->user_x, orders[i]->user_y};
+            transfer_pos = { orders[i]->user_x, orders[i]->user_y };
         else
-            transfer_pos = {orders[i]->rest_x, orders[i]->rest_y};
+            transfer_pos = { orders[i]->rest_x, orders[i]->rest_y };
         int to_transfer_time = Graph::astar(self_x, self_y, transfer_pos.first, transfer_pos.second, Graph::graph);
         if (orders[i]->is_take)
             to_transfer_time += std::max(orders[i]->done_time - (*system_time) - to_transfer_time, 0);
-        int sum_time = to_transfer_time + 
-            cal_delivery_time(transfer_pos.first, transfer_pos.second, orders[0]);
+        int sum_time = to_transfer_time + cal_delivery_time(transfer_pos.first, transfer_pos.second, orders[0]);
         if (sum_time <= orders[0]->required_time) {
             auto it = std::next(orders.begin(), i);
             std::rotate(orders.begin(), it, orders.end());

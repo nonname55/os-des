@@ -1,9 +1,9 @@
-#include "header.h"
-#include "process.h"
-#include "graph.h"
-#include "rider.h"
-#include "user.h"
-#include "restaurant.h"
+#include "../include/header.h"
+#include "../include/process.h"
+#include "../include/graph.h"
+#include "../include/rider.h"
+#include "../include/user.h"
+#include "../include/restaurant.h"
 
 struct Process *riderPro;
 struct Process *userPro;

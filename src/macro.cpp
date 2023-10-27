@@ -1,4 +1,4 @@
-#include "macro.h"
-#include "header.h"
+#include "../include/macro.h"
+#include "../include/header.h"
 
 std::mutex cout_mutex;

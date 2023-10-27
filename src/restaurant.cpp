@@ -1,5 +1,5 @@
-#include "restaurant.h"
-#include "process.h"
+#include "../include/restaurant.h"
+#include "../include/process.h"
 
 Restaurant restaurant;
 
